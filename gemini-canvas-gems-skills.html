@@ -1,0 +1,1868 @@
+<meta charset="utf-8">
+<title>Gemini a fondo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:dark;
+  --bg:#060b1c; --bg2:#0b1530; --card:rgba(255,255,255,.055); --card2:rgba(255,255,255,.09);
+  --line:rgba(255,255,255,.12); --txt:#eef2ff; --mut:#a8b3d6; --dim:#6f7aa3;
+  --blue:#3b82f6; --sky:#60a5fa; --gold:#f5b941; --violet:#8b5cf6; --teal:#2dd4bf; --coral:#fb7185; --green:#34d399; --red:#f87171;
+  --grad:linear-gradient(120deg,#60a5fa 0%,#8b5cf6 45%,#f5b941 100%);
+  --r:18px; --sh:0 20px 60px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;background:var(--bg)}
+body{background:var(--bg);color:var(--txt);font-family:"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased;font-size:16px}
+body::before{content:"";position:fixed;inset:-20%;background:
+ radial-gradient(40% 35% at 15% 20%,rgba(59,130,246,.22),transparent 70%),
+ radial-gradient(35% 30% at 85% 15%,rgba(139,92,246,.20),transparent 70%),
+ radial-gradient(40% 35% at 70% 90%,rgba(245,185,65,.12),transparent 70%),
+ radial-gradient(30% 30% at 10% 85%,rgba(45,212,191,.12),transparent 70%);
+ animation:drift 30s ease-in-out infinite alternate;z-index:0;pointer-events:none}
+@keyframes drift{to{transform:translate(3%,-2%) rotate(3deg)}}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+a{color:var(--sky)}
+code,pre,.mono{font-family:"Cascadia Code",Consolas,"SF Mono",Menlo,monospace}
+.grad-t{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hide{display:none!important}
+
+/* ===== stage ===== */
+#stage{position:relative;z-index:1}
+.scene{position:relative;min-height:100vh;display:flex;border-top:1px solid rgba(255,255,255,.05);overflow-x:clip}
+.scene:first-child{border-top:0}
+.scene-inner{width:100%;padding-block:96px 72px;padding-left:max(96px,env(safe-area-inset-left,0px));padding-right:max(96px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1180px;margin:0 auto;height:100%;display:flex;flex-direction:column;justify-content:center;gap:22px}
+.wrap>*{min-width:0}
+.split>*,.grid>*,.stack>*{min-width:0}
+.seg{max-width:100%}
+.scene.in .rv{animation:rise .7s cubic-bezier(.2,.8,.2,1) both;animation-delay:var(--d,0s)}
+.ch-start .scene-inner::before{content:attr(data-chlabel);display:block;max-width:1180px;margin:0 auto 18px;font-size:.72rem;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--dim)}
+@keyframes rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+
+/* ===== typography ===== */
+.kicker{display:inline-flex;align-items:center;gap:10px;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);font-weight:700}
+.kicker .n{display:inline-grid;place-items:center;min-width:26px;height:26px;padding:0 6px;border-radius:8px;background:var(--grad);color:#0b1530;font-weight:800;letter-spacing:0}
+h1{font-size:clamp(2.4rem,5.6vw,4.8rem);line-height:1.02;font-weight:800;letter-spacing:-.03em}
+h2{font-size:clamp(1.8rem,3.6vw,3rem);line-height:1.08;font-weight:800;letter-spacing:-.02em}
+h3{font-size:1.18rem;font-weight:750;letter-spacing:-.01em}
+.lead{font-size:clamp(1.02rem,1.5vw,1.22rem);color:var(--mut);max-width:780px;line-height:1.55}
+p{line-height:1.6}
+.small{font-size:.86rem;color:var(--mut)}
+.tag{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:.76rem;font-weight:700;background:var(--card2);border:1px solid var(--line)}
+.tag.gold{background:rgba(245,185,65,.15);border-color:rgba(245,185,65,.4);color:#ffd88a}
+.tag.blue{background:rgba(96,165,250,.15);border-color:rgba(96,165,250,.4);color:#bcd8ff}
+.tag.violet{background:rgba(139,92,246,.17);border-color:rgba(139,92,246,.45);color:#d6c8ff}
+.tag.teal{background:rgba(45,212,191,.14);border-color:rgba(45,212,191,.4);color:#a7f3e4}
+.tag.coral{background:rgba(251,113,133,.15);border-color:rgba(251,113,133,.45);color:#ffc2cc}
+.tag.green{background:rgba(52,211,153,.15);border-color:rgba(52,211,153,.4);color:#a7f3d0}
+.tag.red{background:rgba(248,113,113,.15);border-color:rgba(248,113,113,.4);color:#fecaca}
+
+/* ===== cards & grids ===== */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.card.hl{background:linear-gradient(160deg,rgba(96,165,250,.12),rgba(139,92,246,.08));}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(2,1fr)} .g3{grid-template-columns:repeat(3,1fr)} .g4{grid-template-columns:repeat(4,1fr)} .g5{grid-template-columns:repeat(5,1fr)}
+.split{display:grid;grid-template-columns:1fr 1.15fr;gap:28px;align-items:center}
+.split.r{grid-template-columns:1.15fr 1fr}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.stack{display:flex;flex-direction:column;gap:10px}
+.ic{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:1.4rem;background:var(--card2);border:1px solid var(--line);flex:none}
+.ic.b{background:linear-gradient(135deg,#1d4ed8,#60a5fa)} .ic.v{background:linear-gradient(135deg,#6d28d9,#a78bfa)} .ic.g{background:linear-gradient(135deg,#b7791f,#f5b941)} .ic.t{background:linear-gradient(135deg,#0f766e,#2dd4bf)} .ic.c{background:linear-gradient(135deg,#be123c,#fb7185)}
+.callout{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:14px;border:1px solid var(--line);background:var(--card)}
+.callout.gold{border-color:rgba(245,185,65,.45);background:rgba(245,185,65,.09)}
+.callout.blue{border-color:rgba(96,165,250,.45);background:rgba(96,165,250,.09)}
+.callout.coral{border-color:rgba(251,113,133,.45);background:rgba(251,113,133,.09)}
+.callout.teal{border-color:rgba(45,212,191,.45);background:rgba(45,212,191,.08)}
+.callout b{color:#fff}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:12px;font-weight:700;font-size:.92rem;background:var(--card2);border:1px solid var(--line);transition:.2s}
+.btn:hover{background:rgba(255,255,255,.15);transform:translateY(-1px)}
+.btn.pri{background:var(--grad);color:#0b1530;border:0}
+.btn.pri:hover{filter:brightness(1.08)}
+.btn.sm{padding:7px 12px;font-size:.82rem;border-radius:10px}
+.btn.on{background:rgba(96,165,250,.25);border-color:var(--sky)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.seg{display:inline-flex;padding:4px;border-radius:12px;background:var(--card);border:1px solid var(--line);gap:4px;flex-wrap:wrap}
+.seg button{padding:7px 12px;border-radius:9px;font-size:.84rem;font-weight:650;color:var(--mut)}
+.seg button.on{background:var(--grad);color:#0b1530}
+input[type=text],textarea,select{width:100%;background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:12px;padding:10px 12px;outline:none;transition:border .2s}
+input[type=text]:focus,textarea:focus,select:focus{border-color:var(--sky)}
+select option{background:#0b1530}
+textarea{resize:vertical;min-height:70px;line-height:1.45}
+label.f{display:block;font-size:.8rem;font-weight:700;color:var(--mut);margin:0 0 6px}
+pre.code{background:rgba(0,0,0,.4);border:1px solid var(--line);border-radius:14px;padding:16px;font-size:.84rem;line-height:1.55;overflow:auto;white-space:pre-wrap;word-break:break-word;color:#dbe4ff}
+
+/* ===== HUD ===== */
+#top{position:fixed;top:0;left:0;right:0;height:calc(62px + env(safe-area-inset-top,0px));z-index:20;display:flex;align-items:center;gap:16px;padding-top:env(safe-area-inset-top,0px);padding-left:max(22px,env(safe-area-inset-left,0px));padding-right:max(22px,env(safe-area-inset-right,0px));background:linear-gradient(to bottom,rgba(6,11,28,.95) 60%,rgba(6,11,28,0))}
+#brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.02em;font-size:.92rem}
+#brand .dot{width:26px;height:26px;border-radius:8px;background:var(--grad)}
+#rail{flex:1;display:flex;gap:6px;justify-content:center}
+#rail button{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;font-size:.74rem;font-weight:700;color:var(--dim);border:1px solid transparent;transition:.2s;white-space:nowrap}
+#rail button i{display:block;width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.6}
+#rail button.done{color:var(--mut)}
+#rail button.cur{color:#fff;border-color:var(--line);background:var(--card2)}
+#rail button.cur i{background:var(--gold);opacity:1;box-shadow:0 0 10px var(--gold)}
+#hud{display:flex;align-items:center;gap:8px}
+#pts{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:rgba(245,185,65,.14);border:1px solid rgba(245,185,65,.4);font-weight:800;font-size:.84rem;color:#ffd88a}
+.hbtn{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--card);border:1px solid var(--line);font-size:.95rem}
+.hbtn:hover{background:var(--card2)}
+#progress{position:fixed;left:0;right:0;bottom:0;height:4px;z-index:20;background:rgba(255,255,255,.06)}
+#progress i{display:block;height:100%;width:0;background:var(--grad);transition:width .5s}
+.nav-arrow{position:fixed;right:calc(20px + env(safe-area-inset-right,0px));z-index:20;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-size:1.1rem;background:rgba(255,255,255,.08);border:1px solid var(--line);backdrop-filter:blur(10px);transition:.2s}
+.nav-arrow:hover{background:rgba(255,255,255,.18);transform:scale(1.06)}
+#prevB{top:calc(50% - 50px)} #nextB{top:calc(50% + 6px)}
+#counter{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom,0px));right:24px;z-index:20;font-size:.78rem;color:var(--dim);font-weight:700}
+#sceneTitle{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom,0px));left:150px;z-index:20;font-size:.78rem;color:var(--dim);font-weight:700;max-width:40vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.src-fab{position:fixed;bottom:calc(44px + env(safe-area-inset-bottom,0px));right:24px;z-index:20}
+
+/* ===== Coli, el colibrí guía ===== */
+#coli{position:fixed;left:calc(18px + env(safe-area-inset-left,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:25;display:flex;align-items:flex-end;gap:10px;pointer-events:none}
+#coliBtn{pointer-events:auto;width:96px;height:80px;flex:none;filter:drop-shadow(0 8px 18px rgba(0,0,0,.45));animation:hover 3.2s ease-in-out infinite}
+#coliBtn:focus-visible{outline:2px solid var(--gold);border-radius:14px}
+#coliBtn svg,#coverColi svg,[data-coli-mini] svg{width:100%;height:100%;display:block}
+[data-coli-mini]{display:block;width:72px;height:60px;flex:none}
+#coverColi{animation:hover 3.6s ease-in-out infinite}
+@keyframes hover{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-9px) rotate(2deg)}}
+#coliBub{pointer-events:auto;max-width:min(330px,62vw);padding:12px 14px 12px 16px;border-radius:18px 18px 18px 4px;background:#f6f3ea;color:#16203f;font-size:.9rem;line-height:1.45;box-shadow:var(--sh);margin-bottom:44px;transform-origin:bottom left;transition:opacity .3s,transform .3s}
+#coliBub.off{opacity:0;transform:scale(.85);pointer-events:none}
+#coliBub b{color:#0b1530}
+#coliBub .who{display:block;font-size:.7rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#0f766e;margin-bottom:2px}
+#coliBub .x{float:right;margin:-4px -4px 0 8px;font-size:.8rem;color:#64748b;padding:2px 6px}
+.coli-wing{transform-origin:52px 44px;animation:flap .14s linear infinite alternate}
+@keyframes flap{from{transform:rotate(-18deg) scaleY(1)}to{transform:rotate(14deg) scaleY(.55)}}
+.coli .eye-h{display:none}
+.coli.happy .eye-n{display:none}.coli.happy .eye-h{display:inline}
+.coli.think .pupil{transform:translate(1.5px,-1.5px)}
+.coli-say{display:flex;gap:14px;align-items:center;padding:14px 18px;border-radius:18px;background:rgba(45,212,191,.08);border:1px solid rgba(45,212,191,.35)}
+.coli-say svg{width:72px;height:60px;flex:none}
+.coli-say p{font-size:.95rem}
+.coli-say b{color:#a7f3e4}
+
+/* logros */
+#pts{cursor:pointer;transition:.2s}
+#pts:hover{transform:scale(1.05)}
+#pts.bump{animation:bump .6s}
+@keyframes bump{30%{transform:scale(1.35)}60%{transform:scale(.95)}}
+#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:60}
+#unlock{position:fixed;left:50%;top:calc(80px + env(safe-area-inset-top,0px));z-index:61;transform:translate(-50%,-30px) scale(.8);opacity:0;pointer-events:none;transition:transform .5s cubic-bezier(.2,1.6,.4,1),opacity .3s}
+#unlock.on{transform:translate(-50%,0) scale(1);opacity:1}
+#unlock .ub{display:flex;gap:14px;align-items:center;padding:14px 22px 14px 14px;border-radius:22px;background:linear-gradient(135deg,#1e1b4b,#0f2a4a);border:2px solid var(--gold);box-shadow:0 0 0 6px rgba(245,185,65,.15),0 24px 60px rgba(0,0,0,.6);min-width:260px}
+#unlock .ui{width:64px;height:64px;border-radius:18px;display:grid;place-items:center;font-size:2.2rem;background:radial-gradient(circle at 30% 30%,#fde68a,#f59e0b);box-shadow:0 0 30px rgba(245,185,65,.6)}
+#unlock.on .ui{animation:spinIn .9s cubic-bezier(.2,1.4,.4,1)}
+@keyframes spinIn{from{transform:rotate(-200deg) scale(.2)}to{transform:none}}
+#unlock small{display:block;font-size:.7rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+#unlock b{display:block;font-size:1.15rem}
+#unlock #unP{font-size:.8rem;color:var(--mut)}
+.ach.big{grid-template-columns:repeat(2,1fr)}
+.ach div{position:relative;transition:.3s}
+.ach div.on{animation:none}
+.ach div.on span{filter:drop-shadow(0 0 10px rgba(245,185,65,.6))}
+.ach div.secret{border-style:dashed;border-color:rgba(245,185,65,.5);opacity:.85;background:rgba(245,185,65,.05)}
+.ach div.secret span{filter:grayscale(1) blur(1px)}
+.ach div.secret em{display:block;font-style:normal;font-size:.72rem;color:#ffd88a;margin-top:4px}
+.ach div.secret.on{border-style:solid;background:linear-gradient(135deg,rgba(245,185,65,.25),rgba(251,113,133,.2))}
+.ach div.secret.on span{filter:drop-shadow(0 0 14px #f5b941)}
+#coliBtn.gold svg{filter:sepia(1) saturate(5) hue-rotate(-12deg) brightness(1.2) drop-shadow(0 0 10px rgba(245,185,65,.8))}
+#coliBtn.fly{animation:loopFly 2.2s cubic-bezier(.45,0,.55,1)}
+@keyframes loopFly{0%{transform:none}25%{transform:translate(40vw,-45vh) rotate(-20deg) scale(1.6)}50%{transform:translate(70vw,-20vh) rotate(200deg) scale(1.8)}75%{transform:translate(30vw,-55vh) rotate(340deg) scale(1.4)}100%{transform:none}}
+
+/* device chips */
+.dev{display:inline-flex;gap:4px;align-items:center;font-size:.72rem;font-weight:800;padding:3px 8px;border-radius:999px}
+.dev.y{background:rgba(52,211,153,.16);color:#a7f3d0}.dev.n{background:rgba(248,113,113,.16);color:#fecaca}.dev.p{background:rgba(245,185,65,.16);color:#ffd88a}
+
+/* toast */
+#toast{position:fixed;top:76px;left:50%;transform:translate(-50%,-20px);opacity:0;z-index:40;padding:10px 18px;border-radius:999px;background:linear-gradient(120deg,#f5b941,#fcd34d);color:#3b2a05;font-weight:800;box-shadow:var(--sh);transition:.35s;pointer-events:none}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* drawers & modals */
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(440px,92vw);z-index:30;background:rgba(9,16,38,.97);border-left:1px solid var(--line);transform:translateX(105%);transition:transform .4s cubic-bezier(.2,.8,.2,1);padding:24px;overflow:auto;box-shadow:var(--sh)}
+.drawer.on{transform:none}
+.drawer h3{margin-bottom:12px}
+.drawer .x{position:absolute;top:16px;right:16px}
+#notesD textarea{min-height:140px}
+.src-item{padding:14px;border-radius:14px;background:var(--card);border:1px solid var(--line);margin-bottom:10px}
+.src-item b{display:block;margin-bottom:4px}
+.src-item .code-s{font-size:.72rem;font-weight:800;color:var(--gold)}
+#overview{position:fixed;inset:0;z-index:35;background:rgba(6,11,28,.96);padding:80px 40px 40px;overflow:auto;display:none}
+#overview.on{display:block}
+#ovGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;max-width:1300px;margin:0 auto}
+#ovGrid button{text-align:left;padding:14px;border-radius:14px;background:var(--card);border:1px solid var(--line);min-height:96px;transition:.2s}
+#ovGrid button:hover{background:var(--card2);border-color:var(--sky)}
+#ovGrid button.cur{border-color:var(--gold)}
+#ovGrid small{display:block;color:var(--dim);font-size:.72rem;font-weight:700;margin-bottom:6px}
+.modal-bg{position:fixed;inset:0;z-index:38;background:rgba(3,6,16,.7);display:none;place-items:center;padding:20px}
+.modal-bg.on{display:grid}
+.modal{max-width:560px;width:100%;background:#0d1838;border:1px solid var(--line);border-radius:22px;padding:26px;box-shadow:var(--sh)}
+
+/* ===== cover ===== */
+.cover h1 .l2{display:block}
+.orb{position:relative;width:min(420px,80vw);aspect-ratio:1;margin:auto}
+.orb .ring{position:absolute;inset:0;border-radius:50%;border:1px dashed rgba(255,255,255,.18);animation:spin 40s linear infinite}
+.orb .ring.r2{inset:14%;animation-duration:28s;animation-direction:reverse}
+.orb .core{position:absolute;inset:32%;border-radius:50%;background:var(--grad);filter:blur(0);box-shadow:0 0 80px rgba(139,92,246,.55);animation:pulse 4s ease-in-out infinite}
+.orb .sat{position:absolute;width:86px;height:86px;margin:-43px;border-radius:22px;display:grid;place-items:center;font-weight:800;font-size:.78rem;text-align:center;background:rgba(13,24,56,.85);border:1px solid var(--line);backdrop-filter:blur(8px);box-shadow:var(--sh)}
+.orb .sat span{display:block;font-size:1.6rem;margin-bottom:2px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{50%{transform:scale(1.06);box-shadow:0 0 120px rgba(245,185,65,.45)}}
+.floaty{animation:floaty 6s ease-in-out infinite}
+@keyframes floaty{50%{transform:translateY(-10px)}}
+
+/* agenda */
+.agenda{display:grid;gap:10px}
+.ag{display:grid;grid-template-columns:52px 1fr auto;gap:14px;align-items:center;padding:14px 16px;border-radius:16px;background:var(--card);border:1px solid var(--line);text-align:left;transition:.2s}
+.ag:hover{background:var(--card2);transform:translateX(4px)}
+.ag .num{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-weight:800}
+.ag small{color:var(--mut)}
+.ag .min{font-weight:800;color:var(--gold)}
+.timebar{display:flex;height:14px;border-radius:999px;overflow:hidden;border:1px solid var(--line)}
+.timebar i{display:block;height:100%}
+
+/* flip */
+.flip{perspective:1200px;min-height:300px;cursor:pointer}
+.flip .in{position:relative;width:100%;height:100%;min-height:300px;transition:transform .7s cubic-bezier(.2,.8,.2,1);transform-style:preserve-3d}
+.flip.on .in{transform:rotateY(180deg)}
+.flip .fc{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:22px;padding:24px;display:flex;flex-direction:column;gap:12px;border:1px solid var(--line)}
+.flip .front{background:linear-gradient(160deg,rgba(255,255,255,.08),rgba(255,255,255,.02))}
+.flip .back{transform:rotateY(180deg);background:linear-gradient(160deg,rgba(96,165,250,.16),rgba(139,92,246,.12))}
+.flip .big{font-size:3rem}
+.flip .hint{margin-top:auto;font-size:.78rem;color:var(--dim);font-weight:700}
+
+/* ===== Gemini mock ===== */
+.gm{border-radius:20px;border:1px solid var(--line);background:#0e1430;box-shadow:var(--sh);overflow:hidden;position:relative}
+.gm-top{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.03);font-size:.78rem;color:var(--mut)}
+.gm-top i{width:10px;height:10px;border-radius:50%;background:#334}
+.gm-top i:nth-child(1){background:#f87171}.gm-top i:nth-child(2){background:#fbbf24}.gm-top i:nth-child(3){background:#34d399}
+.gm-top .u{margin-left:10px;padding:3px 10px;border-radius:8px;background:rgba(0,0,0,.3)}
+.gm-body{display:flex;min-height:360px}
+.gm-chat{flex:1;display:flex;flex-direction:column;padding:16px;gap:10px;min-width:0;transition:flex .5s}
+.gm-canvas{width:0;overflow:hidden;border-left:1px solid var(--line);background:#121a3c;transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.gm.open .gm-canvas{width:58%}
+.gm-msg{max-width:88%;padding:10px 13px;border-radius:14px;font-size:.86rem;line-height:1.45}
+.gm-msg.u{align-self:flex-end;background:rgba(96,165,250,.2)}
+.gm-msg.a{align-self:flex-start;background:rgba(255,255,255,.06)}
+.gm-input{margin-top:auto;border-radius:20px;border:1px solid var(--line);background:rgba(0,0,0,.25);padding:10px 12px;position:relative}
+.gm-input .ph{font-size:.88rem;color:var(--dim);min-height:22px}
+.gm-input .ph.t{color:var(--txt)}
+.gm-tools{display:flex;align-items:center;gap:8px;margin-top:8px}
+.gm-plus{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.08);font-size:1.1rem}
+.gm-chip{padding:4px 10px;border-radius:999px;font-size:.74rem;font-weight:700;background:rgba(96,165,250,.2);border:1px solid rgba(96,165,250,.5);color:#cfe2ff}
+.gm-send{margin-left:auto;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--grad);color:#0b1530;font-weight:900}
+.gm-menu{position:absolute;bottom:56px;left:8px;width:220px;border-radius:14px;background:#18224a;border:1px solid var(--line);padding:6px;box-shadow:var(--sh);z-index:3}
+.gm-menu button{display:flex;gap:10px;align-items:center;width:100%;padding:9px 10px;border-radius:9px;font-size:.84rem;text-align:left}
+.gm-menu button:hover{background:rgba(255,255,255,.07)}
+.pulse-hl{position:relative;z-index:2;animation:hl 1.4s ease-in-out infinite;border-radius:inherit}
+@keyframes hl{0%,100%{box-shadow:0 0 0 0 rgba(245,185,65,.0),0 0 0 2px rgba(245,185,65,.9)}50%{box-shadow:0 0 0 8px rgba(245,185,65,.18),0 0 0 2px rgba(245,185,65,.9)}}
+.cv-head{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);font-size:.78rem;white-space:nowrap}
+.cv-head .t{font-weight:800;margin-right:auto;overflow:hidden;text-overflow:ellipsis}
+.cv-b{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid var(--line);font-size:.74rem;font-weight:700}
+.cv-doc{padding:16px 18px;font-size:.84rem;line-height:1.6;color:#dbe4ff}
+.cv-doc h4{font-size:1.02rem;margin-bottom:8px;color:#fff}
+.cv-doc p{margin-bottom:8px}
+.disclaim{font-size:.72rem;color:var(--dim);font-weight:600}
+
+/* steps list */
+.steps{counter-reset:s;display:flex;flex-direction:column;gap:8px}
+.steps li{list-style:none;display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:14px;background:var(--card);border:1px solid var(--line);transition:.3s;opacity:.55}
+.steps li::before{counter-increment:s;content:counter(s);flex:none;width:28px;height:28px;border-radius:9px;display:grid;place-items:center;font-weight:800;background:rgba(255,255,255,.08)}
+.steps li.cur{opacity:1;border-color:var(--gold);background:rgba(245,185,65,.08)}
+.steps li.cur::before{background:var(--gold);color:#3b2a05}
+.steps li.ok{opacity:1}
+.steps li.ok::before{content:"✓";background:var(--green);color:#063}
+
+/* hotspots */
+.hs{position:relative;outline:1px dashed rgba(245,185,65,.0);transition:.2s;cursor:pointer}
+.hs:hover,.hs.on{outline:2px solid var(--gold);outline-offset:2px;border-radius:8px}
+.hs-dot{position:absolute;top:-8px;right:-8px;width:18px;height:18px;border-radius:50%;background:var(--gold);color:#3b2a05;font-size:.64rem;font-weight:900;display:grid;place-items:center;box-shadow:0 0 0 4px rgba(245,185,65,.25);animation:pdot 2s infinite}
+@keyframes pdot{50%{box-shadow:0 0 0 8px rgba(245,185,65,.08)}}
+.detail{min-height:150px}
+.detail h3{margin-bottom:6px}
+
+/* tabs */
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tabs button{padding:8px 13px;border-radius:10px;font-size:.84rem;font-weight:700;background:var(--card);border:1px solid var(--line);color:var(--mut)}
+.tabs button.on{background:var(--grad);color:#0b1530;border-color:transparent}
+.pane{min-height:300px}
+
+/* mini outputs */
+.web{border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#f8fafc;color:#0f172a}
+.web .hero{padding:26px;background:linear-gradient(120deg,#1e3a8a,#6d28d9);color:#fff}
+.web .hero b{font-size:1.4rem;display:block}
+.web .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px}
+.web .cols div{background:#eef2ff;border-radius:10px;padding:10px;font-size:.8rem}
+.info{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.info .k{padding:16px;border-radius:14px;text-align:center;background:var(--card2);border:1px solid var(--line)}
+.info .k b{display:block;font-size:2rem;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.bar{height:12px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:999px;background:var(--grad);width:0;transition:width 1.2s cubic-bezier(.2,.8,.2,1)}
+.wave{display:flex;align-items:center;gap:3px;height:60px}
+.wave i{flex:1;border-radius:3px;background:linear-gradient(var(--sky),var(--violet));height:20%;transition:height .15s}
+.tr p{padding:8px 10px;border-radius:10px;font-size:.86rem;color:var(--mut);transition:.3s}
+.tr p.on{background:rgba(96,165,250,.14);color:#fff}
+.slide-mini{aspect-ratio:16/9;border-radius:14px;padding:22px;display:flex;flex-direction:column;justify-content:center;gap:8px;background:linear-gradient(135deg,#0f1e4a,#2a1a5e);border:1px solid var(--line)}
+.slide-mini b{font-size:1.4rem}
+
+/* mcq */
+.mcq{display:flex;flex-direction:column;gap:8px}
+.mcq .q{font-weight:750;margin-bottom:4px}
+.mcq .opt{text-align:left;padding:11px 14px;border-radius:12px;background:var(--card);border:1px solid var(--line);transition:.2s;font-size:.92rem}
+.mcq .opt:hover:not(:disabled){background:var(--card2)}
+.mcq .opt.ok{background:rgba(52,211,153,.16);border-color:var(--green)}
+.mcq .opt.ko{background:rgba(248,113,113,.15);border-color:var(--red)}
+.mcq .fb{font-size:.86rem;color:var(--mut);padding:8px 2px}
+
+/* app demo */
+.appbox{border-radius:14px;padding:18px;background:#f8fafc;color:#0f172a}
+.appbox label{font-size:.78rem;font-weight:700;color:#334155;display:block;margin:8px 0 4px}
+.appbox input[type=range]{width:100%}
+.appbox .res{margin-top:14px;padding:14px;border-radius:12px;background:linear-gradient(120deg,#1e3a8a,#6d28d9);color:#fff}
+.appbox .res b{font-size:1.8rem}
+.console{background:#05070f;border-radius:12px;padding:12px;font-size:.78rem;height:260px;overflow:auto;color:#9ae6b4}
+.console .w{color:#fbbf24}
+.diff div{font-size:.8rem;padding:2px 8px;border-radius:4px}
+.diff .a{background:rgba(52,211,153,.14);color:#a7f3d0}
+.diff .d{background:rgba(248,113,113,.14);color:#fecaca;text-decoration:line-through}
+
+/* matrix */
+.mx{width:100%;border-collapse:separate;border-spacing:6px}
+.mx th{font-size:.76rem;color:var(--mut);font-weight:700;padding:6px}
+.mx td{text-align:center;padding:12px 6px;border-radius:10px;background:var(--card);border:1px solid var(--line);font-size:1.05rem;transition:.25s}
+.mx td.y{background:rgba(52,211,153,.12)} .mx td.p{background:rgba(245,185,65,.12)}
+.mx tr.dim td{opacity:.25}
+.mx tr.sel td{outline:2px solid var(--gold)}
+.mx td:first-child{text-align:left;font-weight:800;font-size:.86rem;background:transparent;border:0}
+
+/* timeline */
+.tl{position:relative;display:grid;grid-template-columns:repeat(7,1fr);gap:8px;padding-top:30px}
+.tl::before{content:"";position:absolute;top:43px;left:3%;right:3%;height:3px;background:linear-gradient(90deg,var(--sky),var(--violet),var(--gold),var(--coral))}
+.tl button{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:0 4px}
+.tl .pin{width:28px;height:28px;border-radius:50%;background:#0d1838;border:3px solid var(--sky);transition:.2s}
+.tl button.on .pin{background:var(--gold);border-color:#fff;transform:scale(1.2)}
+.tl b{font-size:.82rem}
+.tl small{font-size:.72rem;color:var(--mut)}
+.tl .today{position:absolute;top:-2px;left:50%;transform:translateX(-50%);font-size:.66rem;font-weight:900;padding:2px 7px;border-radius:999px;background:var(--coral);color:#fff}
+
+/* skill load */
+.lvl{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.lvl .card{transition:.4s;opacity:.4}
+.lvl .card.on{opacity:1;border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 0 30px rgba(245,185,65,.2)}
+.sklist{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.sk{padding:8px 10px;border-radius:10px;background:rgba(0,0,0,.25);font-size:.8rem;border:1px solid transparent;transition:.3s}
+.sk.m{border-color:var(--green);background:rgba(52,211,153,.12)}
+.sk.x{opacity:.35}
+
+/* annotated code */
+.anno{font-size:.86rem;line-height:1.7;border-radius:16px;background:rgba(0,0,0,.4);border:1px solid var(--line);padding:16px;white-space:pre-wrap}
+.anno > span{display:block;border-radius:6px;padding:0 6px;cursor:pointer;transition:.2s}
+.anno > span:hover,.anno > span.on{background:rgba(245,185,65,.16)}
+.anno .k{color:#93c5fd}.anno .s{color:#fcd34d}.anno .c{color:#a78bfa}
+
+/* checks */
+.chk{display:flex;flex-direction:column;gap:6px}
+.chk div{display:flex;gap:8px;align-items:flex-start;font-size:.84rem;padding:7px 10px;border-radius:10px;background:var(--card)}
+.chk .ok::before{content:"✓";color:var(--green);font-weight:900}
+.chk .ko::before{content:"✗";color:var(--red);font-weight:900}
+.chk .wa::before{content:"!";color:var(--gold);font-weight:900;width:10px;text-align:center}
+.meter{height:10px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}
+.meter i{display:block;height:100%;width:0;transition:width .4s,background .4s}
+
+/* slash sim */
+.sl-box{position:relative}
+.sl-menu{position:absolute;left:0;right:0;bottom:calc(100% + 6px);background:#18224a;border:1px solid var(--line);border-radius:14px;padding:6px;box-shadow:var(--sh);z-index:5}
+.sl-menu button{display:flex;flex-direction:column;align-items:flex-start;width:100%;padding:8px 10px;border-radius:9px;text-align:left}
+.sl-menu button:hover,.sl-menu button.sel{background:rgba(255,255,255,.08)}
+.sl-menu small{color:var(--mut);font-size:.74rem}
+.chips{display:flex;gap:6px;flex-wrap:wrap;min-height:30px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:rgba(139,92,246,.22);border:1px solid rgba(139,92,246,.55);font-size:.78rem;font-weight:700}
+.chip button{opacity:.7}
+
+/* sorter */
+.files{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.file{padding:12px;border-radius:14px;background:var(--card);border:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.file b{font-family:Consolas,monospace;font-size:.86rem}
+.file.ok{border-color:var(--green);background:rgba(52,211,153,.08)}
+.file.ko{border-color:var(--red);background:rgba(248,113,113,.08)}
+.file .fb{font-size:.76rem;color:var(--mut)}
+
+/* compare */
+.cmp{width:100%;border-collapse:collapse}
+.cmp th,.cmp td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left;font-size:.9rem;vertical-align:top}
+.cmp th{font-size:.78rem;color:var(--mut);text-transform:uppercase;letter-spacing:.08em}
+.cmp td:first-child{font-weight:700;color:var(--mut);width:24%}
+.cmp tr.same{transition:.3s}
+.cmp.only tr.same{display:none}
+.cmp .win{color:#a7f3d0;font-weight:700}
+
+/* tree */
+.tree-q{font-size:1.4rem;font-weight:800;line-height:1.3}
+.tree-path{display:flex;flex-wrap:wrap;gap:6px}
+.tree-res{padding:24px;border-radius:20px;background:linear-gradient(140deg,rgba(96,165,250,.16),rgba(245,185,65,.12));border:1px solid rgba(245,185,65,.4)}
+
+/* timer */
+.timer{font-size:2.4rem;font-weight:800;font-variant-numeric:tabular-nums}
+.ck{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border-radius:10px;cursor:pointer;font-size:.88rem}
+.ck:hover{background:var(--card)}
+.ck input{margin-top:3px;accent-color:var(--gold);width:16px;height:16px;flex:none}
+
+/* dial */
+input[type=range]{accent-color:var(--gold)}
+.dial-out{padding:16px;border-radius:14px;background:rgba(0,0,0,.3);border:1px solid var(--line);font-size:.88rem;min-height:120px;white-space:pre-wrap}
+
+/* final */
+.ach{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.ach div{padding:12px;border-radius:14px;background:var(--card);border:1px solid var(--line);text-align:center;font-size:.8rem;opacity:.35}
+.ach div.on{opacity:1;border-color:var(--gold);background:rgba(245,185,65,.1)}
+.ach span{display:block;font-size:1.8rem}
+
+.kit h4{margin:14px 0 6px;font-size:1rem}
+.kit li{margin-left:18px;line-height:1.6;font-size:.9rem;color:var(--mut)}
+@media (max-width:1000px){
+  .scene{min-height:0}
+  .scene-inner{padding-block:84px 40px;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px))}
+  .split,.split.r,.g3,.g4,.g5,.lvl,.info,.files{grid-template-columns:1fr}
+  .g2{grid-template-columns:1fr}
+  .g5.keep2,.g4.keep2{grid-template-columns:1fr 1fr}
+  #rail{display:none}
+  .nav-arrow,#counter,#sceneTitle{display:none}
+  .tl{grid-template-columns:1fr;padding-top:0}
+  .tl::before{display:none}
+  .tl button{flex-direction:row;text-align:left}
+  .gm.open .gm-canvas{width:100%}
+  .gm.open .gm-chat{display:none}
+  .src-fab{bottom:calc(16px + env(safe-area-inset-bottom,0px));right:calc(14px + env(safe-area-inset-right,0px));padding:9px 11px}
+  .src-fab .lbl{display:none}
+  #fsB,#ovB{display:none}
+  #pts .lbl{display:none}
+  .ach.big{grid-template-columns:1fr 1fr}
+  #top{gap:10px}
+  .hbtn{width:34px;height:34px}
+  #pts{padding:5px 10px}
+  #coliBtn{width:72px;height:60px}
+  #coliBub{font-size:.84rem;margin-bottom:34px;max-width:calc(100vw - 150px)}
+  #brand span{font-size:.8rem}
+  .orb{width:min(300px,80vw)}
+  h1{font-size:2.3rem}
+  .cv-head{flex-wrap:wrap;white-space:normal}
+  .mx td,.mx th{padding:8px 3px;font-size:.8rem}
+  .cmp th,.cmp td{padding:9px 8px;font-size:.84rem}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<!-- ============ HUD ============ -->
+<header id="top">
+  <div id="brand"><div class="dot"></div><span id="orgName">Comfenalco Quindío</span></div>
+  <nav id="rail" aria-label="Capítulos"></nav>
+  <div id="hud">
+    <button id="pts" title="Ver mis logros">★ <span id="ptsN">0</span><span class="lbl"> · logros</span></button>
+    <button class="hbtn" id="ovB" title="Mapa de escenas (O)">▦</button>
+    <button class="hbtn" id="notesB" title="Modo facilitador (N)">✎</button>
+    <button class="hbtn" id="fsB" title="Pantalla completa (F)">⛶</button>
+  </div>
+</header>
+<div id="progress"><i></i></div>
+<button class="nav-arrow" id="prevB" aria-label="Sección anterior">↑</button>
+<button class="nav-arrow" id="nextB" aria-label="Sección siguiente">↓</button>
+<div id="sceneTitle"></div>
+<div id="counter"></div>
+<button class="btn sm src-fab" id="srcB">📚<span class="lbl"> Fuente de esta sección</span></button>
+<div id="toast"></div>
+<canvas id="fx" aria-hidden="true"></canvas>
+<div id="unlock" aria-live="polite"><div class="ub"><span class="ui" id="unI">🏆</span><div><small>¡Logro desbloqueado!</small><b id="unT"></b><span id="unP"></span></div></div></div>
+<div id="coli" aria-live="polite">
+  <button id="coliBtn" aria-label="Coli, tu guía. Toca para escuchar su consejo"></button>
+  <div id="coliBub" class="off"><button class="x" id="coliX" aria-label="Cerrar">✕</button><span class="who">Coli · tu guía</span><span id="coliTxt"></span></div>
+</div>
+
+<main id="stage">
+
+<!-- ===================== APERTURA ===================== -->
+<section class="scene" data-ch="ap" data-title="Portada" data-coli="¡Bienvenido! Desliza hacia abajo y yo te voy contando lo importante de cada parte." data-min="2" data-src="S01,S02,S04"
+ data-notes="Bienvenida. Presenta el objetivo: salir sabiendo crear en Canvas, entender qué son las Gems y construir su primera skill. Menciona que todo está verificado con fuentes oficiales de Google al 21-oct-2026 y que el botón 'Fuente' de cada escena permite comprobarlo.">
+<div class="scene-inner"><div class="wrap cover">
+  <div class="split">
+    <div class="stack" style="gap:18px">
+      <span class="kicker rv">Taller para docentes · 2 horas</span>
+      <h1 class="rv" style="--d:.1s">Gemini a fondo:<span class="l2 grad-t">Canvas, Gems y Skills</span></h1>
+      <p class="lead rv" style="--d:.2s">Del chat al aula: aprende a crear guías, presentaciones, quices y juegos en Canvas, a configurar asistentes con Gems y a automatizar tu planeación con Skills.</p>
+      <div class="coli-say rv" style="--d:.35s"><span data-coli-mini="happy"></span><p>¡Hola! Soy <b>Coli</b>, un colibrí del Quindío. Te acompaño en todo el recorrido: tócame cuando quieras una pista.</p></div>
+      <div class="row rv" style="--d:.4s;margin-top:6px">
+        <button class="btn pri" data-go="+1">Comenzar ↓</button>
+        <span class="small">Desliza hacia abajo para avanzar.</span>
+      </div>
+      <p class="small rv" style="--d:.5s">Capacitador: <b id="presenterName">Nicolás Alfaro</b> · <span id="presenterRole">Comfenalco Quindío</span></p>
+    </div>
+    <div class="orb rv floaty" style="--d:.2s" aria-hidden="true">
+      <div class="ring"></div><div class="ring r2"></div><div class="core" style="opacity:.55;filter:blur(18px)"></div>
+      <div id="coverColi" style="position:absolute;inset:24% 18% 26% 22%"></div>
+      <div class="sat" style="left:50%;top:4%"><span>🎨</span>Canvas</div>
+      <div class="sat" style="left:10%;top:72%"><span>💎</span>Gems</div>
+      <div class="sat" style="left:90%;top:72%"><span>🧩</span>Skills</div>
+    </div>
+  </div>
+</div></div></section>
+
+<section class="scene" data-ch="ap" data-title="Agenda" data-coli="Son 2 horas. Toca cualquier bloque si quieres saltar directo a él." data-min="2" data-src="S01,S02"
+ data-notes="Recorre la agenda. Haz clic en cualquier bloque para saltar. Explica la regla: cada bloque termina con práctica o reto. Pregunta al grupo quién ya usa Gemini y quién ha creado una Gem.">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">0</span>Agenda · 120 minutos</span>
+  <h2 class="rv" style="--d:.1s">El recorrido de hoy</h2>
+  <div class="timebar rv" style="--d:.15s" id="timebar"></div>
+  <div class="agenda rv" style="--d:.2s" id="agenda"></div>
+</div></div></section>
+
+<section class="scene" data-ch="ap" data-title="Cómo usar esta presentación" data-coli="Abre esta misma página en tu celular. Así haces los ejercicios mientras miras la pantalla grande." data-min="2" data-src="S01"
+ data-notes="Muestra cómo funciona: puntos por participación, botón de fuentes, modo facilitador (N) y mapa (O). Pide a alguien que gane su primer punto en la tarjeta de prueba.">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">0</span>Reglas del juego</span>
+  <h2 class="rv" style="--d:.1s">Esto no se mira: <span class="grad-t">se toca</span></h2>
+  <div class="grid g4 rv" style="--d:.2s">
+      <div class="card"><div class="ic b">👆</div><h3 style="margin:12px 0 6px">Desliza</h3><p class="small">Baja con el dedo o la rueda del mouse. Todo está en una sola página.</p></div>
+      <div class="card"><div class="ic g">★</div><h3 style="margin:12px 0 6px">Gana puntos</h3><p class="small">Cada acierto suma. Coli celebra contigo.</p></div>
+      <div class="card"><div class="ic v">📚</div><h3 style="margin:12px 0 6px">Compruébalo</h3><p class="small">El botón 📚 abre la página oficial de Google que respalda cada dato.</p></div>
+      <div class="card"><div class="ic t">⌨️</div><h3 style="margin:12px 0 6px">Para quien presenta</h3><p class="small"><b>→/←</b> saltar sección · <b>O</b> mapa · <b>N</b> notas · <b>F</b> pantalla completa</p></div>
+    </div>
+  <div class="card hl rv" style="--d:.3s">
+    <div class="mcq" data-mcq="warm"></div>
+  </div>
+</div></div></section>
+
+<!-- ===================== MAPA ===================== -->
+<section class="scene" data-ch="ma" data-title="Tres herramientas, una idea" data-coli="Truco para recordar: Canvas es &lt;b&gt;dónde&lt;/b&gt;, Gem es &lt;b&gt;quién&lt;/b&gt; y Skill es &lt;b&gt;cómo&lt;/b&gt;. Voltea las tarjetas." data-min="3" data-src="S01,S03,S07"
+ data-notes="Metáfora central: Canvas es DÓNDE creas (la mesa de trabajo), una Gem es QUIÉN te ayuda (un asistente con un rol fijo), una skill es CÓMO se hace (una receta reutilizable). Voltea cada tarjeta y pide un ejemplo del público.">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">1</span>El mapa mental</span>
+  <h2 class="rv" style="--d:.1s">Tres herramientas, <span class="grad-t">tres preguntas</span></h2>
+  <p class="lead rv" style="--d:.15s">Haz clic en cada tarjeta para voltearla.</p>
+  <div class="grid g3 rv" style="--d:.2s">
+    <div class="flip" data-flip><div class="in">
+      <div class="fc front"><div class="big">🎨</div><span class="tag blue">¿DÓNDE creo?</span><h2>Canvas</h2><p class="small">La mesa de trabajo.</p><span class="hint">Clic para voltear ↻</span></div>
+      <div class="fc back"><h3>Canvas = espacio de trabajo</h3><p class="small">Un panel junto al chat donde Gemini y tú crean y editan <b>documentos, presentaciones, apps y código</b>. Puedes editar a mano o pedir cambios sobre una parte, sin regenerar todo.</p><p class="small">📌 Ejemplo: «Crea una presentación de 6 diapositivas sobre el ciclo del agua para grado 5.°»</p></div>
+    </div></div>
+    <div class="flip" data-flip><div class="in">
+      <div class="fc front"><div class="big">💎</div><span class="tag violet">¿QUIÉN me ayuda?</span><h2>Gems</h2><p class="small">El asistente con un rol fijo.</p><span class="hint">Clic para voltear ↻</span></div>
+      <div class="fc back"><h3>Gem = Gemini personalizado</h3><p class="small">Una versión de Gemini con instrucciones y archivos de conocimiento propios. Abres la Gem y conversas <b>dentro de ella</b>.</p><p class="small">📌 Ejemplo: «Diseñador de rúbricas» o «Asistente de planeación».</p><p class="small" style="color:#ffd88a">⚠️ Google la está reemplazando por skills.</p></div>
+    </div></div>
+    <div class="flip" data-flip><div class="in">
+      <div class="fc front"><div class="big">🧩</div><span class="tag gold">¿CÓMO se hace?</span><h2>Skills</h2><p class="small">La receta reutilizable.</p><span class="hint">Clic para voltear ↻</span></div>
+      <div class="fc back"><h3>Skill = instrucciones reutilizables</h3><p class="small">Un «acordeón» con tu proceso, formato y errores a evitar. Se usa <b>en cualquier chat</b> escribiendo <b>/</b>, se activa sola cuando aplica y se pueden <b>combinar</b> varias.</p><p class="small">📌 Ejemplo: /planear-clase + /adaptar-inclusion</p></div>
+    </div></div>
+  </div>
+</div></div></section>
+
+<section class="scene" data-ch="ma" data-title="La noticia que cambia todo" data-coli="Esto es nuevo: Google anunció el 30 de septiembre que las &lt;b&gt;skills reemplazan a las Gems&lt;/b&gt;." data-min="3" data-src="S04,S05,S06"
+ data-notes="Punto clave y reciente: el 30-sep-2026 Google anunció que las skills reemplazarán a las Gems. Para cuentas personales, el retiro empieza en noviembre de 2026; empresas desde marzo de 2027 y educación desde junio de 2027. Las Gems se migran automáticamente como borradores de skills. Ojo: hoy las skills NO funcionan con Canvas ni Deep Research.">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">1</span>Contexto actual</span>
+  <h2 class="rv" style="--d:.1s">La noticia que <span class="grad-t">cambia el mapa</span></h2>
+  <div class="split">
+    <div class="stack rv" style="--d:.2s">
+      <div class="callout gold"><span style="font-size:1.6rem">📣</span><div><b>30 de septiembre de 2026:</b> Google lanzó las skills en Gemini y anunció que <b>reemplazarán a las Gems</b>.</div></div>
+      <div class="callout blue"><span style="font-size:1.6rem">🔁</span><div>Tus Gems <b>no se pierden</b>: se migran automáticamente como <b>borradores de skills</b> cuando se retiren.</div></div>
+      <div class="callout coral"><span style="font-size:1.6rem">🧱</span><div>Por ahora, las skills <b>no funcionan con Canvas, Deep Research, crear video, crear música ni Aprendizaje guiado</b>.</div></div>
+      <div class="callout blue"><span style="font-size:1.6rem">🏫</span><div><b>Cuentas del colegio (Workspace for Education):</b> las Gems duran hasta junio de 2027. Para Classroom, Google recomienda pasar a <b>Gemini Notebook</b> y <b>Aprendizaje guiado</b>.</div></div>
+      <div class="callout teal"><span style="font-size:1.6rem">🧪</span><div>También se apaga <b>Opal</b> (mini apps) y las <b>Gems de Google Labs</b> en noviembre; estas últimas no se migran.</div></div>
+    </div>
+    <div class="card rv" style="--d:.3s">
+      <h3 style="margin-bottom:12px">¿Cuándo dejan de existir las Gems?</h3>
+      <div class="stack">
+        <div><div class="row" style="justify-content:space-between"><b>👤 Cuentas personales</b><span class="tag coral">Nov 2026</span></div><div class="bar" style="margin-top:6px"><i data-w="92"></i></div></div>
+        <div><div class="row" style="justify-content:space-between"><b>🏢 Workspace empresas / ONG</b><span class="tag gold">≥ 1 mar 2027</span></div><div class="bar" style="margin-top:6px"><i data-w="60"></i></div></div>
+        <div><div class="row" style="justify-content:space-between"><b>🎓 Workspace educación</b><span class="tag blue">≥ 1 jun 2027</span></div><div class="bar" style="margin-top:6px"><i data-w="35"></i></div></div>
+      </div>
+      <p class="small" style="margin-top:14px">Si usas la cuenta del colegio, puede que aún no veas Skills: el despliegue a cuentas de trabajo y estudio sigue en curso. Para el taller, usa tu <b>cuenta personal de Google</b>.</p>
+    </div>
+  </div>
+</div></div></section>
+
+<!-- ===================== CANVAS ===================== -->
+<section class="scene" data-ch="ca" data-title="¿Qué es Canvas?" data-coli="Si quieres un resultado que se pueda editar, pide Canvas. Y di siempre el formato: «crea una presentación»." data-min="3" data-src="S01,S08"
+ data-notes="Canvas abre un panel al lado del chat. Lo creado se autoguarda y se puede editar a mano o con ayuda. Recorre los 5 tipos de creación. Enfatiza: incluir en el prompt el formato deseado (p. ej., 'presentación').">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">2</span>Canvas</span>
+  <h2 class="rv" style="--d:.1s">Canvas: del chat <span class="grad-t">al entregable</span></h2>
+  <p class="lead rv" style="--d:.15s">Un espacio interactivo junto a la conversación para crear y editar con Gemini. Los cambios se guardan solos.</p>
+  <div class="grid g5 rv" style="--d:.2s">
+    <div class="card"><div class="ic b">📄</div><h3 style="margin:10px 0 4px">Documentos</h3><p class="small">Guías de clase, talleres, circulares. Edición directa con barra de formato.</p></div>
+    <div class="card"><div class="ic v">🖼️</div><h3 style="margin:10px 0 4px">Presentaciones</h3><p class="small">Diapositivas con texto, paleta e imágenes. Se exportan a Slides o PDF.</p></div>
+    <div class="card"><div class="ic t">🧮</div><h3 style="margin:10px 0 4px">Apps</h3><p class="small">Juegos, simuladores y calculadoras para tus clases, con vista previa en vivo.</p></div>
+    <div class="card"><div class="ic g">💻</div><h3 style="margin:10px 0 4px">Código</h3><p class="small">Edición directa, consola y exportar Python a Colab.</p></div>
+    <div class="card"><div class="ic c">∑</div><h3 style="margin:10px 0 4px">LaTeX</h3><p class="small">Fórmulas para matemáticas y ciencias, exportables a PDF.</p></div>
+  </div>
+  <div class="callout blue rv" style="--d:.3s"><span style="font-size:1.4rem">💡</span><div><b>Truco clave:</b> di el formato en el prompt. «Crea <u>un quiz de 10 preguntas</u> sobre fracciones para grado 6.°» funciona mejor que «háblame de fracciones».</div></div>
+</div></div></section>
+
+<section class="scene" data-ch="ca" data-title="Simulador: abrir Canvas" data-coli="Sigue el botón que parpadea. Son solo cuatro toques." data-min="3" data-src="S01"
+ data-notes="Haz que un voluntario siga los 4 pasos del simulador. Ruta oficial en la web: debajo del cuadro de texto → botón Agregar (+) → Canvas → escribir el prompt → Enviar.">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">2</span>Canvas · Paso a paso</span>
+  <h2 class="rv" style="--d:.1s">Abre Canvas en <span class="grad-t">4 clics</span></h2>
+  <div class="split r">
+    <div class="rv" style="--d:.2s">
+      <div class="gm" id="cvSim">
+        <div class="gm-top"><i></i><i></i><i></i><span class="u">gemini.google.com</span></div>
+        <div class="gm-body">
+          <div class="gm-chat">
+            <div class="gm-msg a">Hola, ¿qué quieres crear hoy?</div>
+            <div id="cvSimMsgs" class="stack"></div>
+            <div class="gm-input">
+              <div class="gm-menu hide" id="cvMenu">
+                <button data-m="img">🖼️ Imagen</button>
+                <button data-m="file">📎 Archivos</button>
+                <button data-m="dr">🔎 Deep Research</button>
+                <button data-m="canvas" id="cvMenuCanvas">🎨 Canvas</button>
+              </div>
+              <div class="ph" id="cvPh">Pregúntale a Gemini</div>
+              <div class="gm-tools">
+                <button class="gm-plus" id="cvPlus" aria-label="Agregar">+</button>
+                <span class="gm-chip hide" id="cvChip">🎨 Canvas ✕</span>
+                <button class="gm-send" id="cvSend" aria-label="Enviar">↑</button>
+              </div>
+            </div>
+          </div>
+          <div class="gm-canvas">
+            <div class="cv-head"><span class="t">Guía: el ciclo del agua</span><span class="cv-b">Crear</span><span class="cv-b">Compartir y exportar</span></div>
+            <div class="cv-doc" id="cvDoc"></div>
+          </div>
+        </div>
+      </div>
+      <p class="disclaim" style="margin-top:8px">Simulación ilustrativa. La interfaz real puede variar según tu cuenta y dispositivo.</p>
+    </div>
+    <div class="stack rv" style="--d:.3s">
+      <ol class="steps" id="cvSteps">
+        <li class="cur"><div><b>Abre el menú «+»</b><br><span class="small">Debajo del cuadro de texto.</span></div></li>
+        <li><div><b>Elige «Canvas»</b><br><span class="small">Aparece como una etiqueta en el cuadro.</span></div></li>
+        <li><div><b>Escribe tu prompt</b><br><span class="small">Haz clic en el cuadro de texto.</span></div></li>
+        <li><div><b>Envía</b><br><span class="small">El panel de Canvas se abre a la derecha.</span></div></li>
+      </ol>
+      <div class="row"><button class="btn sm" id="cvReset">↺ Reiniciar</button><span class="small" id="cvHint">👉 Haz clic en el botón «+» que está parpadeando.</span></div>
+    </div>
+  </div>
+</div></div></section>
+
+<section class="scene" data-ch="ca" data-title="Anatomía del panel Canvas" data-coli="Toca los 11 números dorados. Mi favorito es «Seleccionar y preguntar»." data-min="3" data-src="S01"
+ data-notes="Explora cada control. Insiste en 'Seleccionar y preguntar' (editar solo una parte) y en las versiones anterior/siguiente, que permiten volver atrás sin miedo.">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">2</span>Canvas · Controles</span>
+  <h2 class="rv" style="--d:.1s">Anatomía del panel: <span class="grad-t">explora cada botón</span></h2>
+  <div class="split r">
+    <div class="gm rv" style="--d:.2s">
+      <div class="cv-head" style="flex-wrap:wrap;white-space:normal;gap:6px">
+        <span class="hs cv-b" data-h="ver">‹ › <span class="hs-dot">1</span></span>
+        <span class="t" style="margin-right:auto">Proyecto de aula: huerta escolar</span>
+        <span class="hs cv-b" data-h="code">‹/› Código<span class="hs-dot">2</span></span>
+        <span class="hs cv-b" data-h="console">▤ Consola<span class="hs-dot">3</span></span>
+        <span class="hs cv-b" data-h="create">✦ Crear<span class="hs-dot">4</span></span>
+        <span class="hs cv-b" data-h="share">⇪ Compartir y exportar<span class="hs-dot">5</span></span>
+      </div>
+      <div class="cv-head" style="border-bottom:1px solid var(--line)">
+        <span class="hs cv-b" data-h="toolbar">H1 · <b>B</b> · <i>I</i> · • · 1.<span class="hs-dot">6</span></span>
+      </div>
+      <div class="cv-doc" style="min-height:220px">
+        <h4>Proyecto de aula: huerta escolar</h4>
+        <p><span class="hs" data-h="select" style="background:rgba(96,165,250,.18);border-radius:4px">Cada grupo cuidará una cama de cultivo durante el periodo.<span class="hs-dot">7</span></span> Registrarán el crecimiento cada semana en su bitácora.</p>
+        <p>Al final, presentarán sus resultados en la feria de ciencias.</p>
+      </div>
+      <div class="row" style="padding:10px 12px;border-top:1px solid var(--line);gap:6px">
+        <span class="hs cv-b" data-h="len">↕ Cambiar longitud<span class="hs-dot">8</span></span>
+        <span class="hs cv-b" data-h="tone">♪ Cambiar tono<span class="hs-dot">9</span></span>
+        <span class="hs cv-b" data-h="ask">⌖ Seleccionar y preguntar<span class="hs-dot">10</span></span>
+        <span class="hs cv-b" data-h="ai">✦ Agregar funciones de Gemini<span class="hs-dot">11</span></span>
+      </div>
+    </div>
+    <div class="card detail rv" style="--d:.3s" id="anatDetail">
+      <span class="tag gold">👆 Haz clic en un número</span>
+      <h3 style="margin-top:12px">Cada control tiene un propósito</h3>
+      <p class="small">Explora los 11 puntos. Descubre los 11 y ganas puntos extra.</p>
+      <div class="meter" style="margin-top:12px"><i id="anatMeter" style="background:var(--grad)"></i></div>
+    </div>
+  </div>
+</div></div></section>
+
+<section class="scene" data-ch="ca" data-title="Editar documentos con IA" data-coli="Cambia el tono y la longitud y mira cómo cambia el texto sin escribir un prompt nuevo." data-min="4" data-src="S01"
+ data-notes="Juega con tono y longitud: las 9 combinaciones muestran que no hay que reescribir el prompt. Luego 'Sugerir ediciones' muestra recomendaciones puntuales. Pregunta: ¿cuál versión enviarían a un cliente?">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">2</span>Canvas · Documentos</span>
+  <h2 class="rv" style="--d:.1s">Edita sin reescribir: <span class="grad-t">tono y longitud</span></h2>
+  <div class="split r">
+    <div class="gm rv" style="--d:.2s">
+      <div class="cv-head"><span class="t">Circular a padres: salida pedagógica</span><span class="cv-b">‹ v<span id="edV">1</span> ›</span></div>
+      <div class="cv-doc" style="min-height:230px"><p id="edText"></p><div id="edSug" class="stack"></div></div>
+    </div>
+    <div class="stack rv" style="--d:.3s">
+      <div><label class="f">♪ Cambiar tono</label><div class="seg" id="edTone"><button data-v="0">Casual</button><button data-v="1" class="on">Neutro</button><button data-v="2">Formal</button></div></div>
+      <div><label class="f">↕ Cambiar longitud</label><div class="seg" id="edLen"><button data-v="0">Más corto</button><button data-v="1" class="on">Igual</button><button data-v="2">Más largo</button></div></div>
+      <div><label class="f">✎ Sugerir ediciones</label><button class="btn sm" id="edSugB">Pedir sugerencias a Gemini</button></div>
+      <div class="callout"><span>⌖</span><div class="small"><b>Seleccionar y preguntar:</b> en un documento, selecciona un fragmento con el cursor y escribe en el cuadro qué quieres cambiar. Solo cambia esa parte.</div></div>
+    </div>
+  </div>
+</div></div></section>
+
+<section class="scene" data-ch="ca" data-title="Transformar un documento" data-coli="Un solo informe se vuelve seis cosas distintas. Prueba el quiz y el audio." data-min="4" data-src="S01"
+ data-notes="Botón 'Crear' del panel: convierte un documento en página web, infografía, quiz, Audio Overview, presentación o app. Esta función no está disponible para menores de 18. Prueba el quiz en vivo con el grupo y reproduce el Audio Overview simulado.">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">2</span>Canvas · Botón «Crear»</span>
+  <h2 class="rv" style="--d:.1s">Un documento, <span class="grad-t">seis formatos</span></h2>
+  <div class="split" style="align-items:start">
+    <div class="card rv" style="--d:.2s">
+      <span class="tag blue">📄 Documento origen</span>
+      <h3 style="margin:10px 0 6px">Guía de clase: el ciclo del agua (5.°)</h3>
+      <p class="small">El agua viaja sin parar entre el mar, el aire y la tierra. El sol la evapora, en el aire se condensa en nubes y vuelve como lluvia. Cerca del 97% del agua del planeta es salada y menos del 3% es dulce, y la mayor parte de esa agua dulce está congelada. Por eso cuidar el agua de ríos y quebradas, como las del Quindío, es tan importante.</p>
+      <p class="small" style="margin-top:8px">👉 Clic en <b>Crear</b> y elige un formato.</p>
+      <p class="disclaim" style="margin-top:8px">Texto de ejemplo para la demostración.</p>
+    </div>
+    <div class="rv" style="--d:.3s">
+      <div class="tabs" id="trTabs">
+        <button data-t="web" class="on">🌐 Página web</button><button data-t="info">📊 Infografía</button><button data-t="quiz">❓ Quiz</button><button data-t="audio">🎧 Audio Overview</button><button data-t="slides">🖼️ Presentación</button><button data-t="latex">∑ LaTeX</button>
+      </div>
+      <div class="pane" id="trPane"></div>
+    </div>
+  </div>
+</div></div></section>
+
+<section class="scene" data-ch="ca" data-title="Apps en Canvas" data-coli="Mueve los controles de la calculadora. Esa app la hizo Gemini a partir de una sola frase." data-min="5" data-src="S01"
+ data-notes="Vista previa funcional: mueve los controles. Luego Código (edición directa), Consola (errores y registros) y Cambios recientes. 'Agregar funciones de Gemini' añade IA a la app (requiere 18+). Recuerda: al compartir públicamente una app, quien tenga el enlace puede ver y editar los datos asociados.">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">2</span>Canvas · Apps y código</span>
+  <h2 class="rv" style="--d:.1s">Describe una app, <span class="grad-t">úsala al instante</span></h2>
+  <div class="gm-msg u rv" style="--d:.15s;align-self:flex-start;max-width:100%">«Crea una calculadora de notas: quices 20%, talleres 30%, parcial 20% y examen final 30%, en escala de 1,0 a 5,0. Que diga si el estudiante aprueba con 3,0.»</div>
+  <div class="gm rv" style="--d:.2s">
+    <div class="cv-head"><span class="t">Calculadora de notas del periodo</span>
+      <div class="seg" id="apTabs"><button data-t="prev" class="on">Vista previa</button><button data-t="code">‹/› Código</button><button data-t="cons">▤ Consola</button><button data-t="diff">± Cambios recientes</button></div>
+    </div>
+    <div style="padding:16px" class="grid g2" id="apWrap">
+      <div id="apPane"></div>
+      <div class="stack">
+        <button class="btn" id="apAI">✦ Agregar funciones de Gemini</button>
+        <div class="callout small"><span>🔞</span><div>Agregar IA a la app (generar texto o imágenes) requiere iniciar sesión y <b>ser mayor de 18</b>.</div></div>
+        <div class="callout coral small"><span>🔗</span><div>Si compartes la app con enlace público, <b>quien tenga el enlace puede ver y editar los datos</b> asociados.</div></div>
+        <div class="callout gold small"><span>🛡️</span><div>No pongas nombres ni notas reales de estudiantes en apps compartidas: son datos personales protegidos por la Ley 1581 de 2012.</div></div>
+      </div>
+    </div>
+  </div>
+</div></div></section>
+
+<section class="scene" data-ch="ca" data-title="Compartir y exportar" data-coli="Ojo: los enlaces compartidos abren en el navegador, no en la app de Gemini." data-min="3" data-src="S01,S08"
+ data-notes="Selecciona cada tipo de contenido para ver sus destinos. Los enlaces compartidos solo abren en gemini.google.com, no en la app móvil. En Gemini Enterprise también se exporta a DOCX y PowerPoint.">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">2</span>Canvas · Salidas</span>
+  <h2 class="rv" style="--d:.1s">¿A dónde puede ir <span class="grad-t">lo que creas?</span></h2>
+  <div class="split r">
+    <div class="rv" style="--d:.2s">
+      <div class="seg" id="mxSel" style="margin-bottom:10px"><button data-r="0">📄 Documento</button><button data-r="1">🖼️ Diapositivas</button><button data-r="2">🧮 App</button><button data-r="3">🐍 Código Python</button><button data-r="-1" class="on">Ver todo</button></div>
+      <div style="overflow-x:auto"><table class="mx" id="mx"></table></div>
+      <p class="small" style="margin-top:6px">✅ disponible · 🟡 con condiciones · — no aplica</p>
+    </div>
+    <div class="stack rv" style="--d:.3s">
+      <div class="card"><h3>📍 Ruta</h3><p class="small">Arriba a la derecha del panel: <b>Compartir y exportar</b> → elige destino.</p></div>
+      <div class="card"><h3>🔗 Enlaces públicos</h3><p class="small">Se generan como <span class="mono">g.co/gemini/share/…</span> y <b>solo abren en gemini.google.com</b>. Quien lo abra puede usar <b>Copiar Canvas</b> y seguir editando su propia copia.</p></div>
+      <div class="card"><h3>🏢 Gemini Enterprise</h3><p class="small">Documentos a Google Docs, <b>DOCX</b> o PDF; presentaciones a Google Slides, <b>PowerPoint</b> o PDF.</p></div>
+      <div class="callout gold small"><span>↪</span><div>Exportar crea una <b>copia</b>: los cambios posteriores en Docs no vuelven a Canvas.</div></div>
+    </div>
+  </div>
+</div></div></section>
+
+<section class="scene" data-ch="ca" data-title="Laboratorio de prompts Canvas" data-coli="Arma tu prompt, cópialo y pruébalo en la app de Gemini con Canvas activado." data-min="3" data-src="S01"
+ data-notes="Construye un prompt con el grupo eligiendo las opciones. Cópialo y pruébalo en vivo en gemini.google.com si hay conexión. Muestra las recetas listas debajo.">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">2</span>Canvas · Prompts</span>
+  <h2 class="rv" style="--d:.1s">Laboratorio: <span class="grad-t">arma tu prompt</span></h2>
+  <div class="split rv" style="--d:.2s;align-items:start">
+    <div class="stack">
+      <div class="grid g2">
+        <div><label class="f">Qué crear</label><select id="plType"><option>una presentación de 6 diapositivas</option><option>una guía de trabajo para estudiantes</option><option>un juego interactivo</option><option>un quiz de 10 preguntas con retroalimentación</option><option>una infografía</option><option>una rúbrica de evaluación</option></select></div>
+        <div><label class="f">Audiencia</label><select id="plAud"><option>estudiantes de grado 5.°</option><option>estudiantes de grado 9.°</option><option>estudiantes de grado 11.°</option><option>padres de familia</option><option>colegas docentes</option></select></div>
+      </div>
+      <div><label class="f">Tema</label><input type="text" id="plTopic" value="las fracciones equivalentes"></div>
+      <div class="grid g2">
+        <div><label class="f">Tono</label><select id="plTone"><option>claro y cercano</option><option>divertido, con retos</option><option>formal</option></select></div>
+        <div><label class="f">Idioma</label><select id="plLang"><option>español de Colombia</option><option>español neutro</option><option>inglés</option></select></div>
+      </div>
+      <div class="row">
+        <label class="ck"><input type="checkbox" id="plEx" checked> Ejemplos de la vida diaria</label>
+        <label class="ck"><input type="checkbox" id="plBrand"> Adaptar para estudiantes con dificultades de lectura</label>
+        <label class="ck"><input type="checkbox" id="plQ" checked> Cerrar con 3 preguntas de reflexión</label>
+      </div>
+    </div>
+    <div class="stack">
+      <label class="f">Tu prompt (actívalo con 🎨 Canvas antes de enviar)</label>
+      <pre class="code" id="plOut" style="min-height:180px"></pre>
+      <div class="row"><button class="btn pri sm" id="plCopy">⧉ Copiar prompt</button><a class="btn sm" href="https://gemini.google.com" target="_blank" rel="noopener">Abrir Gemini ↗</a></div>
+    </div>
+  </div>
+  <div class="grid g3 rv" style="--d:.3s" id="recipes"></div>
+</div></div></section>
+
+<section class="scene" data-ch="ca" data-title="Límites y buenas prácticas" data-coli="Regla de oro: lo que diga la IA, compruébalo. Y nada de datos confidenciales." data-min="2" data-src="S01,S04"
+ data-notes="Lista de verificación antes de usar Canvas en trabajo real. Énfasis en revisar datos y no subir información confidencial sin política de la empresa.">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">2</span>Canvas · Antes de usarlo en serio</span>
+  <h2 class="rv" style="--d:.1s">Lo que debes <span class="grad-t">saber y vigilar</span></h2>
+  <div class="grid g3 rv" style="--d:.2s">
+    <div class="card"><div class="ic c">🔞</div><h3 style="margin:10px 0 4px">Edad</h3><p class="small">«Crear» a partir de un documento, copiar un Canvas compartido y agregar IA a apps requieren ser mayor de 18. Tus estudiantes menores no podrán hacerlo.</p></div>
+    <div class="card"><div class="ic b">🌐</div><h3 style="margin:10px 0 4px">Enlaces solo web</h3><p class="small">Los enlaces compartidos no abren en la app móvil de Gemini.</p></div>
+    <div class="card"><div class="ic v">🧾</div><h3 style="margin:10px 0 4px">Actividad</h3><p class="small">Si «Mantener actividad» está activo, el contenido compartido que abras se guarda en tu actividad de Gemini.</p></div>
+    <div class="card"><div class="ic g">🔍</div><h3 style="margin:10px 0 4px">Verifica</h3><p class="small">Revisa conceptos, cifras y fechas antes de llevarlos al aula. La IA también se equivoca.</p></div>
+    <div class="card"><div class="ic t">🧩</div><h3 style="margin:10px 0 4px">Sin skills (por ahora)</h3><p class="small">Las skills aún no funcionan con Canvas. Para instrucciones fijas usa un buen prompt o una Gem mientras exista.</p></div>
+    <div class="card"><div class="ic c">🔒</div><h3 style="margin:10px 0 4px">Confidencialidad</h3><p class="small">No subas nombres, notas ni datos de estudiantes. Están protegidos por la Ley 1581 de 2012 y la política del colegio.</p></div>
+  </div>
+</div></div></section>
+
+<section class="scene" data-ch="ca" data-title="Reto rápido: Canvas" data-coli="Tres preguntas rápidas. ¡A ver cuántos puntos sacas!" data-min="2" data-src="S01"
+ data-notes="Tres preguntas para cerrar Canvas. Pide a la sala que vote antes de revelar.">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">2</span>Canvas · Comprueba lo aprendido</span>
+  <h2 class="rv" style="--d:.1s">Reto rápido <span class="grad-t">Canvas</span></h2>
+  <div class="grid g3 rv" style="--d:.2s">
+    <div class="card"><div class="mcq" data-mcq="c1"></div></div>
+    <div class="card"><div class="mcq" data-mcq="c2"></div></div>
+    <div class="card"><div class="mcq" data-mcq="c3"></div></div>
+  </div>
+</div></div></section>
+
+<!-- ===================== GEMS ===================== -->
+<section class="scene" data-ch="ge" data-title="¿Qué es una Gem?" data-coli="Una Gem es como un compañero con un rol fijo. Abres la Gem y conversas dentro de ella." data-min="2" data-src="S07,S09"
+ data-notes="Gem = versión personalizada de Gemini con rol, instrucciones y archivos. Google ofrece Gems prediseñadas. Se crean y editan en la web; se usan también en móvil. Recordar que están en transición hacia skills.">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">3</span>Gems</span>
+  <h2 class="rv" style="--d:.1s">Una Gem es <span class="grad-t">Gemini con un rol fijo</span></h2>
+  <p class="lead rv" style="--d:.15s">Configuras una vez instrucciones y archivos de conocimiento; cada chat dentro de la Gem arranca con esa preparación.</p>
+  <div class="grid g5 rv" style="--d:.2s">
+    <div class="card"><div class="ic v">💡</div><h3 style="margin:10px 0 4px">Lluvia de ideas</h3><p class="small">Prediseñada por Google</p></div>
+    <div class="card"><div class="ic b">🧭</div><h3 style="margin:10px 0 4px">Guía profesional</h3><p class="small">Prediseñada por Google</p></div>
+    <div class="card"><div class="ic t">👩‍💻</div><h3 style="margin:10px 0 4px">Compañero de código</h3><p class="small">Prediseñada por Google</p></div>
+    <div class="card"><div class="ic g">🎓</div><h3 style="margin:10px 0 4px">Coach de aprendizaje</h3><p class="small">Prediseñada por Google</p></div>
+    <div class="card"><div class="ic c">✍️</div><h3 style="margin:10px 0 4px">Editor de textos</h3><p class="small">Prediseñada por Google</p></div>
+  </div>
+  <div class="grid g3 rv" style="--d:.3s">
+    <div class="callout"><span>🖥️</span><div class="small"><b>Se crean y editan</b> solo en la web (gemini.google.com).</div></div>
+    <div class="callout"><span>📱</span><div class="small"><b>Se usan</b> también desde la app móvil.</div></div>
+    <div class="callout gold"><span>⏳</span><div class="small"><b>En transición:</b> desde el 17 nov 2026 pasan al panel de Configuración.</div></div>
+  </div>
+</div></div></section>
+
+<section class="scene" data-ch="ge" data-title="Crear una Gem paso a paso" data-coli="Fíjate en la vista previa: siempre prueba antes de guardar." data-min="3" data-src="S07,S09"
+ data-notes="Recorre el asistente paso a paso. Enfatiza la vista previa: probar antes de guardar.">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">3</span>Gems · Creación</span>
+  <h2 class="rv" style="--d:.1s">Crear una Gem <span class="grad-t">paso a paso</span></h2>
+  <div class="rv" style="--d:.2s" data-stepper="gem"></div>
+</div></div></section>
+
+<section class="scene" data-ch="ge" data-title="Constructor de instrucciones" data-coli="Toca «Cargar ejemplo» para ver la fórmula completa. Lo que escribas aquí sirve también para tu skill." data-min="4" data-src="S07,S03"
+ data-notes="Las buenas instrucciones tienen 4 piezas: Persona (rol), Tarea, Contexto y Formato. Llena el constructor con el grupo o carga el ejemplo. Este mismo texto servirá luego para la skill.">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">3</span>Gems · Instrucciones</span>
+  <h2 class="rv" style="--d:.1s">La fórmula: <span class="grad-t">Persona · Tarea · Contexto · Formato</span></h2>
+  <div class="split rv" style="--d:.2s;align-items:start">
+    <div class="stack">
+      <div><label class="f">🎭 Persona — ¿quién es?</label><textarea id="gP" placeholder="Eres un docente experto en evaluación y rúbricas…"></textarea></div>
+      <div><label class="f">🎯 Tarea — ¿qué hace?</label><textarea id="gT" placeholder="Crea rúbricas para evaluar trabajos…"></textarea></div>
+      <div><label class="f">🗂️ Contexto — ¿qué debe saber?</label><textarea id="gC" placeholder="Colegio en Armenia, escala de 1,0 a 5,0…"></textarea></div>
+      <div><label class="f">🧱 Formato — ¿cómo entrega?</label><textarea id="gF" placeholder="Tabla con criterios y 4 niveles de desempeño…"></textarea></div>
+      <div class="row"><button class="btn sm" id="gEx">Cargar ejemplo</button><button class="btn sm" id="gClr">Limpiar</button></div>
+    </div>
+    <div class="stack">
+      <div class="row" style="justify-content:space-between"><label class="f" style="margin:0">Instrucciones resultantes</label><span class="tag" id="gScoreT">0/4</span></div>
+      <div class="meter"><i id="gMeter"></i></div>
+      <pre class="code" id="gOut" style="min-height:260px"></pre>
+      <div class="chk" id="gChk"></div>
+      <button class="btn pri sm" id="gCopy" style="align-self:flex-start">⧉ Copiar instrucciones</button>
+    </div>
+  </div>
+</div></div></section>
+
+<section class="scene" data-ch="ge" data-title="Conocimiento, herramienta y compartir" data-coli="Dato útil: hoy las Gems sí funcionan con Canvas y las skills todavía no." data-min="2" data-src="S07,S09,S04"
+ data-notes="Archivos de conocimiento: la Gem los consulta en cada respuesta. Herramienta predeterminada: por ejemplo, que la Gem trabaje siempre con Canvas. Puedes duplicar y compartir Gems. Al migrar, descarga los archivos.">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">3</span>Gems · Superpoderes</span>
+  <h2 class="rv" style="--d:.1s">Lo que hace útil a una Gem</h2>
+  <div class="grid g4 rv" style="--d:.2s">
+    <div class="card"><div class="ic b">📚</div><h3 style="margin:10px 0 4px">Conocimiento</h3><p class="small">Sube archivos (manuales, políticas, plantillas) para que los consulte al responder.</p></div>
+    <div class="card"><div class="ic v">🛠️</div><h3 style="margin:10px 0 4px">Herramienta por defecto</h3><p class="small">Puede arrancar con una herramienta, por ejemplo Canvas o Deep Research.</p></div>
+    <div class="card"><div class="ic t">👀</div><h3 style="margin:10px 0 4px">Vista previa</h3><p class="small">Prueba la Gem mientras la configuras, antes de guardar.</p></div>
+    <div class="card"><div class="ic g">🔗</div><h3 style="margin:10px 0 4px">Duplicar y compartir</h3><p class="small">Duplica para variantes y comparte con tu equipo.</p></div>
+  </div>
+  <div class="callout gold rv" style="--d:.3s"><span style="font-size:1.4rem">💡</span><div><b>Hoy, la ventaja de las Gems:</b> funcionan con Canvas y Deep Research, algo que las skills todavía no hacen. Úsalas para esos flujos mientras dure la transición.</div></div>
+</div></div></section>
+
+<section class="scene" data-ch="ge" data-title="Línea de tiempo de la transición" data-coli="Toca cada fecha. Las cuentas personales pierden las Gems en noviembre." data-min="3" data-src="S04,S05,S06"
+ data-notes="Haz clic en cada hito. La marca 'Hoy' está en octubre de 2026. Nota: el 13-oct Google informó que el lanzamiento en Workspace Studio y apps de Workspace se retrasó.">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">3</span>Gems → Skills</span>
+  <h2 class="rv" style="--d:.1s">Línea de tiempo <span class="grad-t">de la transición</span></h2>
+  <div class="tl rv" style="--d:.2s" id="tl"></div>
+  <div class="card rv" style="--d:.3s;min-height:130px" id="tlD"></div>
+</div></div></section>
+
+<!-- ===================== SKILLS ===================== -->
+<section class="scene" data-ch="sk" data-title="¿Qué es una skill?" data-coli="Una skill es un acordeón: corto, concreto y reutilizable en cualquier chat." data-min="3" data-src="S02,S03,S05"
+ data-notes="Skill = acordeón, no manual. Instrucciones breves, reglas de formato y errores a evitar. Tres beneficios: acceso con '/', uso automático y se pueden apilar. Requisitos actuales: 18+, cuenta personal, Mantener actividad activo; web, app móvil y app de Mac.">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">4</span>Skills</span>
+  <h2 class="rv" style="--d:.1s">Una skill es un <span class="grad-t">acordeón, no un manual</span></h2>
+  <p class="lead rv" style="--d:.15s">Instrucciones reutilizables que enseñan a Gemini a hacer un tipo de tarea <b>como tú la harías</b>, sin explicarla otra vez.</p>
+  <div class="grid g3 rv" style="--d:.2s">
+    <div class="card hl"><div class="ic g">/</div><h3 style="margin:10px 0 4px">Acceso fácil</h3><p class="small">Escribe <b>/</b> y el nombre de la skill en cualquier chat (Google anunció que pasará a <b>@</b>).</p></div>
+    <div class="card hl"><div class="ic b">⚡</div><h3 style="margin:10px 0 4px">Uso automático</h3><p class="small">Gemini detecta cuándo una skill activa es relevante y la aplica sola.</p></div>
+    <div class="card hl"><div class="ic v">🧱</div><h3 style="margin:10px 0 4px">Apilables</h3><p class="small">Combina varias en el mismo prompt: estilo de escritura + guía de marca.</p></div>
+  </div>
+  <div class="grid g4 rv" style="--d:.3s">
+    <div class="callout small"><span>🔞</span><div>Mayor de 18</div></div>
+    <div class="callout small"><span>👤</span><div>Cuenta personal (trabajo/estudio: en despliegue)</div></div>
+    <div class="callout small"><span>🧾</span><div>«Mantener actividad» activado</div></div>
+    <div class="callout small"><span>💻</span><div>Web, app móvil y app de Mac</div></div>
+  </div>
+</div></div></section>
+
+<section class="scene" data-ch="sk" data-title="Cómo lee Gemini una skill" data-coli="Dale play. Verás que Gemini primero lee solo el nombre y la descripción." data-min="3" data-src="S03"
+ data-notes="Animación de carga progresiva: Gemini primero mira solo nombre y descripción, luego lee las instrucciones de la relevante, y solo abre archivos si los necesita. Conclusión: el nombre y la descripción son lo más importante.">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">4</span>Skills · Por dentro</span>
+  <h2 class="rv" style="--d:.1s">Gemini lee <span class="grad-t">solo lo que necesita</span></h2>
+  <div class="row rv" style="--d:.15s"><div class="gm-msg u" style="max-width:none">Prompt: «Planea mi clase de fracciones para grado 6.°, de 55 minutos»</div><button class="btn pri sm" id="ldPlay">▶ Ver cómo decide</button></div>
+  <div class="lvl rv" style="--d:.2s">
+    <div class="card" id="ld1"><span class="tag blue">Nivel 1</span><h3 style="margin:8px 0 4px">Revisa nombre y descripción</h3><p class="small">De todas las skills activas.</p>
+      <div class="sklist" id="ldList"><div class="sk" data-k="m">planear-clase</div><div class="sk">crear-rubrica</div><div class="sk">redactar-circular-padres</div><div class="sk">generar-quiz</div></div></div>
+    <div class="card" id="ld2"><span class="tag violet">Nivel 2</span><h3 style="margin:8px 0 4px">Lee las instrucciones</h3><p class="small">Solo de la skill relevante.</p><pre class="code" style="font-size:.74rem;margin-top:8px"># Pasos
+1. Objetivo de aprendizaje
+2. Inicio · desarrollo · cierre
+3. Evaluación formativa</pre></div>
+    <div class="card" id="ld3"><span class="tag gold">Nivel 3</span><h3 style="margin:8px 0 4px">Abre archivos si hace falta</h3><p class="small">Plantillas, guías o ejemplos incluidos.</p><div class="sklist"><div class="sk">📄 formato-planeacion.md</div><div class="sk">📄 estandares-mate.pdf</div></div></div>
+  </div>
+  <div class="callout gold rv" style="--d:.3s"><span>🎯</span><div><b>Lección:</b> si el nombre y la descripción son vagos, Gemini no sabrá cuándo usar tu skill. Ahí está el 80% del éxito.</div></div>
+</div></div></section>
+
+<section class="scene" data-ch="sk" data-title="Cinco formas de crear una skill" data-coli="Si es tu primera vez, empieza con «Crear con Gemini». Te va guiando con preguntas." data-min="2" data-src="S02,S04"
+ data-notes="Ruta: barra lateral → Configuración → Skills. Cinco maneras: con Gemini, plantilla recomendada, manual, subir archivo/carpeta, o pedirlo en un chat. Recomendación para principiantes: 'Crear con Gemini'.">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">4</span>Skills · Crear</span>
+  <h2 class="rv" style="--d:.1s">Cinco caminos <span class="grad-t">para crear una skill</span></h2>
+  <div class="callout blue rv" style="--d:.15s"><span>📍</span><div><b>Ruta:</b> gemini.google.com → barra lateral → <b>Configuración</b> → <b>Skills</b></div></div>
+  <div class="grid g5 rv" style="--d:.2s">
+    <div class="card"><div class="ic v">✨</div><h3 style="margin:10px 0 4px">Crear con Gemini</h3><p class="small">Sigues las preguntas en un chat guiado. Ideal para empezar.</p><span class="tag green" style="margin-top:8px">Recomendado</span></div>
+    <div class="card"><div class="ic b">📋</div><h3 style="margin:10px 0 4px">Plantilla</h3><p class="small">En «Recomendadas», edita nombre, descripción e instrucciones.</p></div>
+    <div class="card"><div class="ic t">✍️</div><h3 style="margin:10px 0 4px">Manual</h3><p class="small">«Crear manualmente»: llenas los tres campos desde cero.</p></div>
+    <div class="card"><div class="ic g">⬆️</div><h3 style="margin:10px 0 4px">Subir</h3><p class="small">Un SKILL.md, una carpeta o un .zip con SKILL.md en la raíz.</p></div>
+    <div class="card"><div class="ic c">💬</div><h3 style="margin:10px 0 4px">Desde un chat</h3><p class="small">«Crea una skill basada en estas instrucciones: …»</p></div>
+  </div>
+  <div class="callout gold rv small" style="--d:.3s"><span>ℹ️</span><div>Activar, desactivar o eliminar una skill solo se hace desde la página de Skills, no desde el chat. Las skills son portables: siguen el estándar abierto <b>SKILL.md</b>, así que puedes traer skills creadas en otras plataformas.</div></div>
+</div></div></section>
+
+<section class="scene" data-ch="sk" data-title="Anatomía de SKILL.md" data-coli="Toca cada línea del archivo. La descripción es la parte más importante." data-min="3" data-src="S02,S03"
+ data-notes="Haz clic en cada línea del archivo. El encabezado (entre ---) contiene name y description. El cuerpo, las instrucciones en Markdown. Los archivos de referencia van en la misma carpeta.">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">4</span>Skills · El archivo</span>
+  <h2 class="rv" style="--d:.1s">Anatomía de <span class="grad-t mono">SKILL.md</span></h2>
+  <div class="split r">
+    <div class="anno mono rv" style="--d:.2s" id="anno"></div>
+    <div class="stack rv" style="--d:.3s">
+      <div class="card detail" id="annoD"><span class="tag gold">👆 Haz clic en una línea</span><h3 style="margin-top:10px">Cada parte cumple una función</h3><p class="small">El archivo es texto plano en Markdown. Puedes escribirlo en cualquier editor.</p></div>
+      <div class="card"><h3 style="margin-bottom:8px">📁 Estructura de carpeta</h3><pre class="code" style="font-size:.8rem">planear-clase/
+├── SKILL.md               ← obligatorio, en la raíz
+├── formato-planeacion.md  ← opcional
+└── estandares-mate.pdf    ← opcional</pre><p class="small">Al subir una carpeta, su nombre debe coincidir con el de la skill.</p></div>
+    </div>
+  </div>
+</div></div></section>
+
+<section class="scene" data-ch="sk" data-title="Constructor y validador de skills" data-coli="¡Momento estrella! Llega al 100% y copia tu skill para pegarla en Gemini." data-min="7" data-src="S02,S03"
+ data-notes="Momento práctico central. Construyan juntos una skill. El validador revisa las reglas oficiales: nombre en minúsculas con guiones, empieza con verbo, descripción en tercera persona con 'Úsala cuando…', ≤1024 caracteres. Copia el resultado y pégalo en Gemini (sirve en el celular) o, en computador, descarga y sube el SKILL.md.">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">4</span>Skills · Taller</span>
+  <h2 class="rv" style="--d:.1s">Construye y valida <span class="grad-t">tu primera skill</span></h2>
+  <div class="split rv" style="--d:.2s;align-items:start">
+    <div class="stack">
+      <div class="row"><button class="btn sm" data-sb="acta">Ejemplo: planear clase</button><button class="btn sm" data-sb="post">Ejemplo: circular a padres</button><button class="btn sm" data-sb="bad">Ejemplo con errores</button></div>
+      <div><label class="f">Nombre (name)</label><input type="text" id="sbN" placeholder="planear-clase"></div>
+      <div><label class="f">Descripción (description) · <span id="sbDc">0</span>/1024</label><textarea id="sbD" placeholder="Diseña planeaciones de clase… Úsala cuando…"></textarea></div>
+      <div><label class="f">Instrucciones</label><textarea id="sbI" style="min-height:120px" placeholder="## Pasos&#10;1. …"></textarea></div>
+      <div class="row">
+        <label class="ck"><input type="checkbox" id="sbF" checked> Plantilla de formato</label>
+        <label class="ck"><input type="checkbox" id="sbE" checked> Errores comunes</label>
+        <label class="ck"><input type="checkbox" id="sbM" checked> Si falta información</label>
+      </div>
+    </div>
+    <div class="stack">
+      <div class="row" style="justify-content:space-between"><b>Validación</b><span class="tag" id="sbScore">0%</span></div>
+      <div class="meter"><i id="sbMeter"></i></div>
+      <div class="chk" id="sbChk"></div>
+      <pre class="code" id="sbOut" style="max-height:260px"></pre>
+      <div class="row"><button class="btn pri sm" id="sbDl">⧉ Copiar para pegar en Gemini</button><button class="btn sm" id="sbCp">⧉ Copiar solo SKILL.md</button></div>
+      <p class="small">En el celular: abre la app de Gemini, pega el texto y envía. Gemini crea la skill y la guarda en tu página de Skills.</p>
+    </div>
+  </div>
+</div></div></section>
+
+<section class="scene" data-ch="sk" data-title="Usar skills con /" data-coli="Escribe «/» en el cuadro y elige dos skills. Así se apilan." data-min="3" data-src="S02,S04,S05"
+ data-notes="Escribe '/' en el cuadro para ver el menú. Agrega dos o tres skills para mostrar el apilamiento. Explica que el atajo pasará a '@'.">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">4</span>Skills · Invocar y apilar</span>
+  <h2 class="rv" style="--d:.1s">Escribe <span class="grad-t">/</span> y combina skills</h2>
+  <div class="split r">
+    <div class="gm rv" style="--d:.2s">
+      <div class="gm-top"><i></i><i></i><i></i><span class="u">gemini.google.com</span></div>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:10px;min-height:340px">
+        <div id="slMsgs" class="stack" style="flex:1"></div>
+        <div class="chips" id="slChips"></div>
+        <div class="sl-box">
+          <div class="sl-menu hide" id="slMenu"></div>
+          <input type="text" id="slIn" placeholder="Escribe / para elegir una skill…" autocomplete="off">
+        </div>
+        <div class="row"><button class="btn pri sm" id="slSend">Enviar ↑</button><button class="btn sm" id="slReset">↺</button><span class="small">Prueba: «/» → elige 2 skills → escribe tu pedido.</span></div>
+      </div>
+    </div>
+    <div class="stack rv" style="--d:.3s">
+      <div class="card"><h3>🧱 Apilar = sumar reglas</h3><p class="small">Ejemplo oficial de Google para docentes: combinar «boletín semanal» + «guía de marca institucional» para que las comunicaciones salgan con la imagen del colegio.</p></div>
+      <div class="card"><h3>⌨️ Atajo</h3><p class="small">Hoy: <b class="mono">/</b>. Google anunció que cambiará a <b class="mono">@</b>.</p></div>
+      <div class="card"><h3>🗂️ Historial</h3><p class="small">A diferencia de las Gems, no hay una página con «chats de esta skill»: aparecen en tu lista normal de chats.</p></div>
+    </div>
+  </div>
+</div></div></section>
+
+<section class="scene" data-ch="sk" data-title="Activación automática" data-coli="Prueba el ejemplo 5: una sola frase puede activar dos skills al tiempo." data-min="3" data-src="S02,S03"
+ data-notes="Elige un prompt de ejemplo o escribe uno. El simulador compara con las descripciones de las skills activas. Apaga una skill para mostrar que una desactivada no se usa automáticamente (pero si la pides, Gemini pregunta si quieres reactivarla).">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">4</span>Skills · Automático</span>
+  <h2 class="rv" style="--d:.1s">¿Qué skill se <span class="grad-t">activa sola?</span></h2>
+  <div class="split rv" style="--d:.2s;align-items:start">
+    <div class="stack" id="atSkills"></div>
+    <div class="stack">
+      <div class="row" id="atPresets"></div>
+      <textarea id="atIn" placeholder="Escribe un pedido…">Planea mi clase de fracciones para grado 6.°</textarea>
+      <button class="btn pri sm" id="atGo" style="align-self:flex-start">⚡ Analizar pedido</button>
+      <div class="card" id="atOut" style="min-height:120px"><p class="small">El resultado aparecerá aquí.</p></div>
+      <p class="disclaim">Simulación didáctica por palabras clave. Gemini real interpreta intención y contexto.</p>
+    </div>
+  </div>
+</div></div></section>
+
+<section class="scene" data-ch="sk" data-title="Archivos de referencia" data-coli="Pista: si lo abres en un bloc de notas y se lee, casi seguro entra." data-min="3" data-src="S02,S04"
+ data-notes="Juego: ¿se puede subir este archivo dentro de una skill? Regla práctica: si se abre y se lee en un editor de texto básico, probablemente sí. PDF e imágenes también. Binarios como .docx o .xlsx no.">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">4</span>Skills · Archivos</span>
+  <h2 class="rv" style="--d:.1s">¿Este archivo <span class="grad-t">entra en la skill?</span></h2>
+  <div class="files rv" style="--d:.2s" id="files"></div>
+  <div class="grid g4 rv" style="--d:.3s">
+    <div class="card"><b class="grad-t" style="font-size:1.8rem">100 MB</b><p class="small">Tamaño total máximo de los archivos subidos.</p></div>
+    <div class="card"><b class="grad-t" style="font-size:1.8rem">100</b><p class="small">Skills activas a la vez (puedes crear más y desactivar).</p></div>
+    <div class="card"><b class="grad-t" style="font-size:1.8rem">0</b><p class="small">Acciones externas: los scripts no pueden usar internet.</p></div>
+    <div class="card"><b class="grad-t" style="font-size:1.8rem">↺</b><p class="small">Para cambiar archivos, vuelve a subir la skill completa.</p></div>
+  </div>
+</div></div></section>
+
+<section class="scene" data-ch="sk" data-title="¿Crear una skill o no?" data-coli="No todo merece una skill. Si lo haces una sola vez, basta con un buen prompt." data-min="3" data-src="S03"
+ data-notes="Decide con el grupo. Regla oficial: crea skills para prompts repetidos, formatos que corriges una y otra vez, o pasos entre apps conectadas. No para tareas únicas, que ya salen bien, o que cambian constantemente.">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">4</span>Skills · Criterio</span>
+  <h2 class="rv" style="--d:.1s">¿Vale la pena <span class="grad-t">una skill?</span></h2>
+  <div class="grid g3 rv" style="--d:.2s" id="yn"></div>
+</div></div></section>
+
+<section class="scene" data-ch="sk" data-title="Buenas prácticas" data-coli="Mueve el dial: tareas creativas, más libertad; tareas críticas, pasos exactos." data-min="3" data-src="S03"
+ data-notes="Mueve el dial de libertad: tareas creativas → instrucciones generales; tareas críticas → pasos exactos. Repasa las 6 prácticas oficiales.">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">4</span>Skills · Escribir bien</span>
+  <h2 class="rv" style="--d:.1s">Seis prácticas que <span class="grad-t">sí funcionan</span></h2>
+  <div class="split r">
+    <div class="grid g2 rv" style="--d:.2s">
+      <div class="card"><h3>🏷️ Nombre con verbo</h3><p class="small mono">plan-meal-from-recipe ✓<br>recipe-data ✗</p></div>
+      <div class="card"><h3>🎯 «Úsala cuando…»</h3><p class="small">Descripción en tercera persona con situaciones concretas.</p></div>
+      <div class="card"><h3>🧱 Plantillas</h3><p class="small">Incluye la estructura exacta de la salida.</p></div>
+      <div class="card"><h3>⚠️ Errores comunes</h3><p class="small">Una sección con lo que nunca debe pasar.</p></div>
+      <div class="card"><h3>☑️ Checklists</h3><p class="small">Para tareas largas: pasos que Gemini marca.</p></div>
+      <div class="card"><h3>❓ Si falta info</h3><p class="small">«Pregúntame en vez de inventar.»</p></div>
+    </div>
+    <div class="card rv" style="--d:.3s">
+      <h3>🎚️ Dial de libertad</h3>
+      <p class="small" style="margin:4px 0 12px">¿Cuánta libertad das a Gemini?</p>
+      <input type="range" id="dial" min="0" max="100" value="20" style="width:100%">
+      <div class="row" style="justify-content:space-between"><span class="small">Creativa</span><span class="small">Estricta</span></div>
+      <div class="dial-out mono" id="dialOut" style="margin-top:10px"></div>
+    </div>
+  </div>
+</div></div></section>
+
+<section class="scene" data-ch="sk" data-title="Migrar una Gem a skill" data-coli="Si no la migras tú, Google la migra solita como borrador. Pero así la dejas como quieres." data-min="3" data-src="S04"
+ data-notes="Procedimiento oficial manual en 3 bloques. Si no lo haces, Google la migrará automáticamente como borrador. Recuerda: las skills de la app de Gemini no aparecen automáticamente en Workspace.">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">4</span>Skills · Migración</span>
+  <h2 class="rv" style="--d:.1s">Migra tu Gem <span class="grad-t">sin esperar</span></h2>
+  <div class="rv" style="--d:.2s" data-stepper="mig"></div>
+</div></div></section>
+
+<section class="scene" data-ch="sk" data-title="Compatibilidad actual de skills" data-coli="Google dijo que compartir skills y usar archivos de Drive llega en las próximas semanas." data-min="2" data-src="S04,S05"
+ data-notes="Mapa de compatibilidad a hoy. Google anunció que 'en las próximas semanas' las skills tendrán compartir, archivos de Drive y notebooks de Gemini Notebook.">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">4</span>Skills · Hoy</span>
+  <h2 class="rv" style="--d:.1s">¿Con qué funcionan <span class="grad-t">las skills hoy?</span></h2>
+  <div class="grid g4 rv" style="--d:.2s" id="compat"></div>
+</div></div></section>
+
+<!-- ===================== DECIDIR ===================== -->
+<section class="scene" data-ch="de" data-title="Gems vs Skills" data-coli="Activa «Solo diferencias» para ver lo que de verdad cambia." data-min="3" data-src="S04,S06,S09"
+ data-notes="Activa 'Solo diferencias' para enfocar la conversación.">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">5</span>Decidir</span>
+  <div class="row rv" style="--d:.1s;justify-content:space-between"><h2>Gems <span class="grad-t">vs</span> Skills</h2><label class="ck"><input type="checkbox" id="onlyDiff"> Solo diferencias</label></div>
+  <div class="card rv" style="--d:.2s;padding:6px 10px;overflow-x:auto"><table class="cmp" id="cmp"></table></div>
+</div></div></section>
+
+<section class="scene" data-ch="de" data-title="Brújula: ¿qué uso?" data-coli="Responde sí o no y te digo qué herramienta te conviene." data-min="2" data-src="S01,S03,S04"
+ data-notes="Recorre la brújula con dos casos reales del público.">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">5</span>Decidir</span>
+  <h2 class="rv" style="--d:.1s">Brújula: <span class="grad-t">¿qué herramienta uso?</span></h2>
+  <div class="card rv" style="--d:.2s;min-height:280px" id="tree"></div>
+</div></div></section>
+
+<!-- ===================== TALLER ===================== -->
+<section class="scene" data-ch="ta" data-title="Taller práctico" data-coli="¡Tu turno! Elige un reto y hazlo en tu celular. Yo te aplaudo cada paso." data-min="12" data-src="S01,S02"
+ data-notes="Diez minutos. Cada persona elige un reto. Usa el temporizador. Marca los criterios al completar. Recorre la sala ayudando.">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">6</span>Manos a la obra</span>
+  <div class="row rv" style="--d:.1s;justify-content:space-between">
+    <h2>Taller: <span class="grad-t">elige tu reto</span></h2>
+    <div class="row"><div class="timer" id="tmr">10:00</div><button class="btn sm" id="tmrB">▶ Iniciar</button><button class="btn sm" id="tmrR">↺</button></div>
+  </div>
+  <div class="card rv" style="--d:.15s">
+    <div class="row" style="justify-content:space-between;margin-bottom:10px"><h3>📱 ¿Qué puedes hacer desde el celular?</h3><span class="small">App de Gemini en Android o iPhone</span></div>
+    <div class="grid g3" id="devGrid"></div>
+  </div>
+  <div class="grid g3 rv" style="--d:.2s" id="retos"></div>
+</div></div></section>
+
+<!-- ===================== CIERRE ===================== -->
+<section class="scene" data-ch="ci" data-title="Quiz final" data-coli="Ocho preguntas. Sin presión: aquí equivocarse también enseña." data-min="4" data-src="S01,S02,S03,S04"
+ data-notes="Ocho preguntas. Hazlo en voz alta con votación a mano alzada.">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">7</span>Cierre</span>
+  <h2 class="rv" style="--d:.1s">Quiz final</h2>
+  <div class="card rv" style="--d:.2s;min-height:320px" id="fq"></div>
+</div></div></section>
+
+<section class="scene" data-ch="ci" data-title="Cierre y kit de bolsillo" data-coli="¡Lo lograste! Copia el kit de bolsillo y guárdalo en tus notas." data-min="3" data-src="S01,S02,S03,S04,S05,S06,S07,S08,S09"
+ data-notes="Muestra logros, imprime el kit de bolsillo y comparte las fuentes. Agradece y abre preguntas.">
+<div class="scene-inner"><div class="wrap">
+  <span class="kicker rv"><span class="n">7</span>Cierre</span>
+  <h2 class="rv" style="--d:.1s">Te llevas <span class="grad-t">tres superpoderes</span></h2>
+  <div class="grid g3 rv" style="--d:.15s">
+    <div class="card hl"><div class="ic b">🎨</div><h3 style="margin:10px 0 4px">Canvas</h3><p class="small">+ → Canvas → di el formato → edita por partes → exporta.</p></div>
+    <div class="card hl"><div class="ic v">💎</div><h3 style="margin:10px 0 4px">Gems</h3><p class="small">Persona · Tarea · Contexto · Formato. Úsalas para Canvas y Deep Research mientras existan.</p></div>
+    <div class="card hl"><div class="ic g">🧩</div><h3 style="margin:10px 0 4px">Skills</h3><p class="small">Nombre con verbo + «Úsala cuando…» + plantilla + errores. Invoca con /, apila.</p></div>
+  </div>
+  <div class="card rv" style="--d:.2s"><div class="row" style="justify-content:space-between;margin-bottom:10px"><h3>🏆 Tus logros · <span id="finalPts">0</span> puntos</h3><button class="btn sm" data-reset-all>↺ Reiniciar todo</button><button class="btn sm" id="allSrcB">📚 Todas las fuentes</button></div><div class="ach" id="ach"></div></div>
+  <div class="card rv kit" style="--d:.25s"><div class="row" style="justify-content:space-between"><h3>🧾 Kit de bolsillo</h3><button class="btn pri sm" id="kitCp">⧉ Copiar kit</button></div><div id="kitBody"></div></div>
+  <p class="small rv" style="--d:.3s">Gracias · <span class="pName"></span> · <span class="oName"></span></p>
+</div></div></section>
+
+</main>
+
+<!-- drawers -->
+<aside class="drawer" id="srcD" aria-label="Fuentes"><button class="hbtn x" data-close="srcD">✕</button><h3>📚 Fuentes y cómo comprobarlo</h3><p class="small" style="margin-bottom:14px">Google actualiza estas funciones con frecuencia: comprueba siempre la página oficial.</p><div id="srcList"></div></aside>
+<aside class="drawer" id="achD" aria-label="Mis logros"><button class="hbtn x" data-close="achD">✕</button><h3>🏆 Mis logros</h3><div class="row" style="justify-content:space-between;margin-bottom:8px"><span class="small" id="achCount"></span><span class="tag gold">★ <span id="achPts">0</span> puntos</span></div><div class="meter" style="margin-bottom:16px"><i id="achMeter" style="background:var(--grad)"></i></div><div class="ach big" id="achGrid"></div><p class="small" style="margin-top:16px">Los logros se guardan en este dispositivo.</p><button class="btn sm" data-reset-all style="margin-top:10px">↺ Reiniciar todo el taller</button></aside>
+<aside class="drawer" id="notesD" aria-label="Modo facilitador"><button class="hbtn x" data-close="notesD">✕</button><h3>✎ Modo facilitador</h3>
+  <div class="grid g2" style="margin-bottom:12px"><div class="card" style="padding:12px"><small class="small">Tiempo de sesión</small><div class="timer" style="font-size:1.6rem" id="sessT">00:00</div><button class="btn sm" id="sessB">▶</button></div><div class="card" style="padding:12px"><small class="small">Sugerido en esta escena</small><div class="timer" style="font-size:1.6rem" id="sceneMin">0 min</div><small class="small" id="planAcc"></small></div></div>
+  <label class="f">Notas de la escena</label><div class="card small" id="notesTxt" style="line-height:1.6"></div>
+  <label class="f" style="margin-top:14px">Personalizar</label>
+  <div class="stack"><input type="text" id="cfgName" placeholder="Nombre del facilitador"><input type="text" id="cfgRole" placeholder="Cargo"><input type="text" id="cfgOrg" placeholder="Organización"></div>
+</aside>
+<div id="overview"><div style="max-width:1300px;margin:0 auto 16px" class="row"><h2 style="font-size:1.6rem">Mapa de escenas</h2><button class="btn sm" id="ovX" style="margin-left:auto">Cerrar ✕</button></div><div id="ovGrid"></div></div>
+<div class="modal-bg" id="modal"><div class="modal" id="modalBody"></div></div>
+
+
+<script>
+/* ================= CONFIG ================= */
+var CFG={presenter:'Nicolás Alfaro',role:'Capacitador',org:'Comfenalco Quindío'};
+try{var sv=JSON.parse(localStorage.getItem('gcfg3')||'null');if(sv){CFG=Object.assign(CFG,sv);}}catch(e){}
+
+var CH=[
+ {id:'ap',name:'Apertura',c:'#60a5fa'},{id:'ma',name:'Mapa',c:'#8b5cf6'},{id:'ca',name:'Canvas',c:'#3b82f6'},
+ {id:'ge',name:'Gems',c:'#a78bfa'},{id:'sk',name:'Skills',c:'#f5b941'},{id:'de',name:'Decidir',c:'#2dd4bf'},
+ {id:'ta',name:'Taller',c:'#fb7185'},{id:'ci',name:'Cierre',c:'#34d399'}];
+
+var SRC={
+ S01:{t:'Create docs, apps & more with Canvas',e:'Gemini Apps Help (Google)',u:'https://support.google.com/gemini/answer/16047321?hl=es',how:'Abre gemini.google.com → botón + debajo del cuadro → Canvas.'},
+ S02:{t:'Create & manage skills for Gemini Apps',e:'Gemini Apps Help (Google)',u:'https://support.google.com/gemini/answer/17094296?hl=es',how:'gemini.google.com → barra lateral → Configuración → Skills.'},
+ S03:{t:'Write effective skills for Gemini Apps',e:'Gemini Apps Help (Google)',u:'https://support.google.com/gemini/answer/17102773?hl=es',how:'Compara tu skill con los ejemplos de nombre y descripción del artículo.'},
+ S04:{t:'About the transition from Gems to skills',e:'Gemini Apps Help (Google)',u:'https://support.google.com/gemini/answer/18560919?hl=es',how:'Revisa las fechas de retiro y los pasos de migración manual.'},
+ S05:{t:'Let skills in Gemini tackle your most repetitive tasks (30-sep-2026)',e:'Blog oficial de Google',u:'https://blog.google/products-and-platforms/products/gemini/automate-tasks-with-skills/',how:'Anuncio oficial del lanzamiento y del reemplazo de Gems.'},
+ S06:{t:'Introducing skills in the Gemini app and Workspace, plus what’s next for Gems',e:'Google Workspace Updates',u:'https://workspaceupdates.googleblog.com/2026/09/skills-gemini-app-workspace.html',how:'Fechas clave por tipo de cuenta y actualización del 13-oct-2026.'},
+ S07:{t:'Get started with Gems in Gemini Apps',e:'Gemini Apps Help (Google)',u:'https://support.google.com/gemini/answer/15236321?hl=es',how:'gemini.google.com → barra lateral → Gems.'},
+ S08:{t:'Create and edit documents and slides in Canvas (Gemini Enterprise)',e:'Google Cloud Docs',u:'https://docs.cloud.google.com/gemini/enterprise/docs/assistant-canvas',how:'Aplica a cuentas de Gemini Enterprise.'},
+ S09:{t:'What are Gemini Gems? (guía de creación)',e:'Zapier · fuente secundaria',u:'https://zapier.com/blog/gemini-gems/',how:'Fuente secundaria para la interfaz de creación de Gems; contrástala con la ayuda oficial.'}
+};
+
+/* ================= ENGINE ================= */
+var scenes=[].slice.call(document.querySelectorAll('.scene'));
+var cur=0,lock=false,points=0,awarded={};
+try{var st=JSON.parse(localStorage.getItem('gstate')||'null');if(st){points=st.p||0;awarded=st.a||{};}}catch(e){}
+function $(s,r){return (r||document).querySelector(s)}
+function $$(s,r){return [].slice.call((r||document).querySelectorAll(s))}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function save(){try{localStorage.setItem('gstate',JSON.stringify({p:points,a:awarded}))}catch(e){}}
+function toast(t){var el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(function(){el.classList.remove('on')},1900)}
+function award(id,p,msg){if(awarded[id])return;awarded[id]=1;points+=p;$('#ptsN').textContent=points;save();var pb=$('#pts');pb.classList.remove('bump');void pb.offsetWidth;pb.classList.add('bump');var ax=(typeof ACH!=='undefined')&&ACH.find(function(x){return x[0]===id});if(ax)showUnlock(ax,p);if(typeof coliSay==='function'&&coliOn){coliSay(CHEERS[Math.floor(Math.random()*CHEERS.length)]+'<b>+'+p+' puntos</b>'+(msg?' · '+msg:''),'happy',3800)}else toast('★ +'+p+(msg?' · '+msg:''));renderAch()}
+$('#ptsN').textContent=points;
+
+function buildRail(){
+  var r=$('#rail');r.innerHTML='';
+  CH.forEach(function(c){var b=document.createElement('button');b.innerHTML='<i></i>'+c.name;b.dataset.ch=c.id;b.onclick=function(){go(scenes.findIndex(function(s){return s.dataset.ch===c.id}))};r.appendChild(b)});
+}
+/* ---- scroll engine: la página se desliza libremente; las flechas saltan de sección ---- */
+function go(i){
+  if(i<0||i>=scenes.length)return;
+  var y=scenes[i].getBoundingClientRect().top+window.pageYOffset-(window.innerWidth>1000?0:56);
+  window.scrollTo({top:Math.max(0,y),behavior:'smooth'});
+}
+function setCur(i){
+  if(i===cur&&setCur.done)return;setCur.done=1;
+  cur=i;var s=scenes[i];
+  $('#counter').textContent=(i+1)+' / '+scenes.length;
+  $('#sceneTitle').textContent=(CH.find(function(c){return c.id===s.dataset.ch})||{}).name+' · '+s.dataset.title;
+  var chIdx=CH.findIndex(function(c){return c.id===s.dataset.ch});
+  $$('#rail button').forEach(function(b,k){b.classList.toggle('cur',k===chIdx);b.classList.toggle('done',k<chIdx)});
+  $('#notesTxt').textContent=s.dataset.notes||'—';
+  $('#sceneMin').textContent=(s.dataset.min||0)+' min';
+  var acc=0;for(var k=0;k<i;k++)acc+=+scenes[k].dataset.min||0;
+  $('#planAcc').textContent='Plan acumulado al llegar: '+acc+' min';
+  try{history.replaceState(null,'','#'+(i+1))}catch(e){}
+  document.dispatchEvent(new CustomEvent('scene',{detail:s}));
+  coliScene(s);
+  if(i===scenes.length-1)award('end',10,'¡Llegaste al final!');
+}
+function onScroll(){
+  var probe=window.innerHeight*0.38,best=0;
+  for(var i=0;i<scenes.length;i++){if(scenes[i].getBoundingClientRect().top<=probe)best=i;else break}
+  var max=document.documentElement.scrollHeight-window.innerHeight;
+  if(max>0&&window.pageYOffset>=max-4)best=scenes.length-1;
+  $('#progress i').style.width=(max>0?window.pageYOffset/max*100:0)+'%';
+  setCur(best);
+}
+var ticking=false;
+window.addEventListener('scroll',function(){if(!ticking){ticking=true;requestAnimationFrame(function(){ticking=false;onScroll()})}},{passive:true});
+window.addEventListener('resize',onScroll);
+if('IntersectionObserver' in window){
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:0.08});
+  scenes.forEach(function(s){io.observe(s)});
+}else scenes.forEach(function(s){s.classList.add('in')});
+function next(){go(cur+1)} function prev(){go(cur-1)}
+$('#nextB').onclick=next;$('#prevB').onclick=prev;
+document.addEventListener('click',function(e){var g=e.target.closest('[data-go]');if(g){var v=g.dataset.go;go(v[0]==='+'?cur+ +v.slice(1):+v)}});
+
+function typing(){var a=document.activeElement;return a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA'||a.tagName==='SELECT')}
+document.addEventListener('keydown',function(e){
+  if(typing())return;
+  var k=e.key;
+  if(k==='ArrowRight'||k==='PageDown'){e.preventDefault();next()}
+  else if(k==='ArrowLeft'||k==='PageUp'){e.preventDefault();prev()}
+  else if(k==='Home'){e.preventDefault();go(0)}else if(k==='End'){e.preventDefault();go(scenes.length-1)}
+  else if(k==='n'||k==='N')toggleD('notesD');
+  else if(k==='o'||k==='O')toggleOv();
+  else if(k==='f'||k==='F')fs();
+  else if(k==='Escape'){$$('.drawer').forEach(function(d){d.classList.remove('on')});$('#overview').classList.remove('on');closeModal()}
+});
+
+/* ---- Coli, el colibrí guía ---- */
+function coliSVG(mood){
+  return '<svg class="coli '+(mood||'')+'" viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'+
+  '<defs><linearGradient id="cB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#0e7490"/></linearGradient>'+
+  '<linearGradient id="cT" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fb7185"/><stop offset="1" stop-color="#a855f7"/></linearGradient>'+
+  '<linearGradient id="cW" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bae6fd"/><stop offset="1" stop-color="#38bdf8" stop-opacity=".55"/></linearGradient></defs>'+
+  '<path d="M30 62 L6 76 L12 66 L2 64 L14 58 L8 50 Z" fill="#0f766e"/>'+
+  '<ellipse cx="50" cy="58" rx="26" ry="16" transform="rotate(-18 50 58)" fill="url(#cB)"/>'+
+  '<ellipse cx="54" cy="64" rx="14" ry="7" transform="rotate(-18 54 64)" fill="#ecfdf5" opacity=".75"/>'+
+  '<g class="coli-wing"><path d="M52 44 C40 18 58 6 70 10 C68 24 62 36 52 44 Z" fill="url(#cW)" stroke="#e0f2fe" stroke-width="1"/></g>'+
+  '<circle cx="78" cy="38" r="15" fill="url(#cB)"/>'+
+  '<path d="M68 46 C74 54 86 52 90 44 C84 48 74 48 68 46 Z" fill="url(#cT)"/>'+
+  '<path d="M91 36 L119 31 L91 41 Z" fill="#1e293b"/>'+
+  '<g class="eye-n"><circle cx="82" cy="34" r="4.2" fill="#0b1530"/><circle class="pupil" cx="83.4" cy="32.6" r="1.4" fill="#fff"/></g>'+
+  '<path class="eye-h" d="M78 35 Q82 29 86 35" stroke="#0b1530" stroke-width="2.4" fill="none" stroke-linecap="round"/>'+
+  '<circle cx="76" cy="42" r="3" fill="#fb7185" opacity=".55"/>'+
+  '</svg>';
+}
+var coliT=null,coliOn=true,coliMood='';
+function coliDraw(m){coliMood=m||'';$('#coliBtn').innerHTML=coliSVG(coliMood)}
+function coliSay(t,mood,ms){
+  if(!coliOn)return;
+  $('#coliTxt').innerHTML=t;$('#coliBub').classList.remove('off');coliDraw(mood);
+  clearTimeout(coliT);coliT=setTimeout(function(){$('#coliBub').classList.add('off');coliDraw('')},ms||7000);
+}
+var lastColi=null;
+var lastCh=null;
+function coliScene(s){
+  var t=s.dataset.coli;if(!t||lastColi===s)return;lastColi=s;
+  if(s===scenes[0])return; /* la portada ya tiene su saludo */
+  var mobile=window.innerWidth<=1000;
+  if(mobile&&lastCh===s.dataset.ch)return; /* en el celular habla solo al cambiar de capítulo */
+  lastCh=s.dataset.ch;
+  clearTimeout(coliScene.t);coliScene.t=setTimeout(function(){if(scenes[cur]===s)coliSay(t,'',mobile?5500:8000)},700);
+}
+var CHEERS=['¡Eso es! ','¡Bien hecho! ','¡Vas volando! ','¡Excelente! ','¡Así se hace! '];
+var HINTS=['Casi. Lee la pista y vuelve a intentarlo en la próxima. 💡','No pasa nada: equivocarse aquí sale gratis. 💡','Buena intención. Revisa la explicación que apareció. 💡'];
+$('#coliBtn').onclick=function(){
+  var b=$('#coliBub');
+  if(b.classList.contains('off')){coliOn=true;coliSay(scenes[cur].dataset.coli||'Desliza hacia abajo y sigue explorando.','',9000)}
+  else{b.classList.add('off');coliDraw('')}
+};
+$('#coliX').onclick=function(e){e.stopPropagation();$('#coliBub').classList.add('off');coliDraw('')};
+coliDraw('');
+$$('[data-coli-mini]').forEach(function(el){el.innerHTML=coliSVG(el.dataset.coliMini)});
+if($('#coverColi'))$('#coverColi').innerHTML=coliSVG('happy');
+function fs(){if(!document.fullscreenElement){document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()}else{document.exitFullscreen&&document.exitFullscreen()}}
+$('#fsB').onclick=fs;
+function toggleD(id){var d=document.getElementById(id);var on=!d.classList.contains('on');$$('.drawer').forEach(function(x){x.classList.remove('on')});d.classList.toggle('on',on)}
+$$('[data-close]').forEach(function(b){b.onclick=function(){document.getElementById(b.dataset.close).classList.remove('on')}});
+$('#notesB').onclick=function(){toggleD('notesD')};
+function showSources(list){
+  $('#srcList').innerHTML=list.map(function(k){var s=SRC[k];if(!s)return'';return '<div class="src-item"><span class="code-s">'+k+'</span><b>'+esc(s.t)+'</b><span class="small">'+esc(s.e)+'</span><p class="small" style="margin:6px 0">🔎 <b>Compruébalo:</b> '+esc(s.how)+'</p><a href="'+s.u+'" target="_blank" rel="noopener">Abrir fuente ↗</a></div>'}).join('');
+  $$('.drawer').forEach(function(x){x.classList.remove('on')});$('#srcD').classList.add('on');award('src',3,'Revisaste una fuente');
+}
+$('#srcB').onclick=function(){showSources((scenes[cur].dataset.src||'').split(',').filter(Boolean))};
+$('#allSrcB').onclick=function(){showSources(Object.keys(SRC))};
+function toggleOv(){var o=$('#overview');o.classList.toggle('on');if(o.classList.contains('on')){$('#ovGrid').innerHTML=scenes.map(function(s,i){var c=CH.find(function(x){return x.id===s.dataset.ch});return '<button data-i="'+i+'" class="'+(i===cur?'cur':'')+'"><small style="color:'+c.c+'">'+(i+1)+' · '+c.name+' · '+s.dataset.min+' min</small>'+esc(s.dataset.title)+'</button>'}).join('');$$('#ovGrid button').forEach(function(b){b.onclick=function(){go(+b.dataset.i);toggleOv()}})}}
+$('#ovB').onclick=toggleOv;$('#ovX').onclick=toggleOv;
+function modal(html){$('#modalBody').innerHTML=html+'<div style="margin-top:16px;text-align:right"><button class="btn pri sm" onclick="closeModal()">Entendido</button></div>';$('#modal').classList.add('on')}
+function closeModal(){$('#modal').classList.remove('on')}
+$('#modal').onclick=function(e){if(e.target.id==='modal')closeModal()};
+function copyText(t,btn){function ok(){if(btn){var o=btn.textContent;btn.textContent='✓ Copiado';setTimeout(function(){btn.textContent=o},1400)}}
+  if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(ok,fallback)}else fallback();
+  function fallback(){var ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(ta);ok()}}
+
+/* session timer */
+var sessS=0,sessI=null;
+$('#sessB').onclick=function(){if(sessI){clearInterval(sessI);sessI=null;this.textContent='▶'}else{sessI=setInterval(function(){sessS++;$('#sessT').textContent=String(Math.floor(sessS/60)).padStart(2,'0')+':'+String(sessS%60).padStart(2,'0')},1000);this.textContent='❚❚'}};
+
+/* config */
+function applyCfg(){$('#presenterName').textContent=CFG.presenter;$('#presenterRole').textContent=CFG.org;$('#orgName').textContent=CFG.org;$$('.pName').forEach(function(e){e.textContent=CFG.presenter});$$('.oName').forEach(function(e){e.textContent=CFG.org});$('#cfgName').value=CFG.presenter;$('#cfgRole').value=CFG.role;$('#cfgOrg').value=CFG.org}
+['cfgName','cfgRole','cfgOrg'].forEach(function(id){document.getElementById(id).addEventListener('input',function(){CFG.presenter=$('#cfgName').value;CFG.role=$('#cfgRole').value;CFG.org=$('#cfgOrg').value;try{localStorage.setItem('gcfg3',JSON.stringify(CFG))}catch(e){}applyCfg()})});
+
+/* bars on scene enter */
+document.addEventListener('scene',function(e){$$('.bar i',e.detail).forEach(function(b){b.style.width='0';setTimeout(function(){b.style.width=b.dataset.w+'%'},250)})});
+
+/* ================= AGENDA ================= */
+(function(){
+  var tot={};scenes.forEach(function(s){tot[s.dataset.ch]=(tot[s.dataset.ch]||0)+(+s.dataset.min||0)});
+  var desc={ap:'Bienvenida, objetivos y reglas',ma:'Canvas, Gems y Skills en una imagen + la gran noticia',ca:'Abrir, editar, transformar, crear apps, exportar y prompts',ge:'Crear asistentes, la fórmula PTCF y la transición',sk:'Crear, validar, invocar, apilar y migrar skills',de:'Comparativa y brújula de decisión',ta:'Tres retos prácticos con temporizador',ci:'Quiz final, logros y kit de bolsillo'};
+  var sum=0;for(var k in tot)sum+=tot[k];
+  $('#timebar').innerHTML=CH.map(function(c){return '<i title="'+c.name+'" style="width:'+(tot[c.id]/sum*100)+'%;background:'+c.c+'"></i>'}).join('');
+  $('#agenda').innerHTML=CH.map(function(c,i){return '<button class="ag" data-ch="'+c.id+'"><span class="num" style="background:'+c.c+'22;color:'+c.c+'">'+i+'</span><span><b>'+c.name+'</b><br><small>'+desc[c.id]+'</small></span><span class="min">'+tot[c.id]+' min</span></button>'}).join('');
+  $$('#agenda .ag').forEach(function(b){b.onclick=function(){go(scenes.findIndex(function(s){return s.dataset.ch===b.dataset.ch}))}});
+})();
+
+/* ================= MCQ ================= */
+var MCQ={
+ warm:{q:'Para calentar: ¿qué crees que es una «skill» en Gemini?',o:['Un modelo de IA nuevo','Instrucciones reutilizables que guardas y usas en cualquier chat','Un plan de pago de Google'],a:1,f:'Exacto: instrucciones reutilizables. ¡Hoy aprenderás a crearlas!'},
+ c1:{q:'¿Cómo abres Canvas en la web?',o:['Configuración → Canvas','Botón + debajo del cuadro de texto → Canvas','Escribiendo /canvas'],a:1,f:'Ruta oficial: «Agregar» (+) debajo del cuadro → Canvas.'},
+ c2:{q:'Quieres cambiar solo un párrafo. ¿Qué usas?',o:['Regenerar toda la respuesta','Seleccionar el texto y pedir el cambio','Exportar a Docs'],a:1,f:'Seleccionas y pides: solo cambia esa parte.'},
+ c3:{q:'¿A dónde exportas código Python desde Canvas?',o:['Google Sheets','Google Colab','Google Keep'],a:1,f:'Python se exporta a Colab.'}
+};
+function renderMCQ(el,id,onDone){
+  var m=MCQ[id];el.innerHTML='<div class="q">'+esc(m.q)+'</div>'+m.o.map(function(o,i){return '<button class="opt" data-i="'+i+'">'+esc(o)+'</button>'}).join('')+'<div class="fb"></div>';
+  $$('.opt',el).forEach(function(b){b.onclick=function(){var i=+b.dataset.i;$$('.opt',el).forEach(function(x){x.disabled=true});b.classList.add(i===m.a?'ok':'ko');$$('.opt',el)[m.a].classList.add('ok');$('.fb',el).innerHTML=esc((i===m.a?'✅ ':'💡 ')+m.f)+' <button class="btn sm" style="margin-left:6px;padding:4px 10px" data-retry>↺ Otra vez</button>';$('[data-retry]',el).onclick=function(){renderMCQ(el,id,onDone)};if(i===m.a)award('mcq_'+id,5,'Correcto');else coliSay(HINTS[Math.floor(Math.random()*HINTS.length)],'think',5000);if(onDone)onDone(i===m.a)}});
+}
+$$('[data-mcq]').forEach(function(el){renderMCQ(el,el.dataset.mcq)});
+
+/* flips */
+$$('[data-flip]').forEach(function(f,i){f.onclick=function(){f.classList.toggle('on');award('flip'+i,2)}});
+
+/* ================= CANVAS SIM ================= */
+(function(){
+  var step=0,sim=$('#cvSim');
+  var prompt='Crea una guía corta para grado 5.° sobre el ciclo del agua, con 3 actividades para hacer en clase.';
+  function setStep(n){step=n;$$('#cvSteps li').forEach(function(li,i){li.classList.toggle('cur',i===n);li.classList.toggle('ok',i<n)});
+    $$('.pulse-hl',sim).forEach(function(x){x.classList.remove('pulse-hl')});
+    var hints=['👉 Haz clic en el botón «+» que está parpadeando.','👉 Elige «Canvas» en el menú.','👉 Haz clic en el cuadro de texto para escribir.','👉 Ahora envía con la flecha.','🎉 ¡Listo! Canvas abierto a la derecha.'];
+    $('#cvHint').textContent=hints[n];
+    var t=[$('#cvPlus'),$('#cvMenuCanvas'),$('#cvPh'),$('#cvSend')][n];if(t)t.classList.add('pulse-hl');}
+  function reset(){sim.classList.remove('open');$('#cvMenu').classList.add('hide');$('#cvChip').classList.add('hide');$('#cvPh').textContent='Pregúntale a Gemini';$('#cvPh').classList.remove('t');$('#cvSimMsgs').innerHTML='';$('#cvDoc').innerHTML='';setStep(0)}
+  $('#cvPlus').onclick=function(){if(step!==0)return;$('#cvMenu').classList.remove('hide');setStep(1)};
+  $$('#cvMenu button').forEach(function(b){b.onclick=function(){if(b.dataset.m!=='canvas'){toast('Esa no: busca «Canvas»');return}$('#cvMenu').classList.add('hide');$('#cvChip').classList.remove('hide');setStep(2)}});
+  $('#cvPh').onclick=function(){if(step!==2)return;var i=0,ph=$('#cvPh');ph.classList.add('t');ph.textContent='';var iv=setInterval(function(){ph.textContent=prompt.slice(0,++i);if(i>=prompt.length){clearInterval(iv);setStep(3)}},18)};
+  $('#cvSend').onclick=function(){if(step!==3)return;$('#cvSimMsgs').innerHTML='<div class="gm-msg u">'+esc(prompt)+'</div><div class="gm-msg a">Listo, abrí tu guía en Canvas. Puedes editarla directamente o pedirme cambios.</div>';$('#cvPh').textContent='Pregúntale a Gemini';$('#cvPh').classList.remove('t');sim.classList.add('open');
+    var html='<h4>Guía: el ciclo del agua · Grado 5.°</h4><p><b>Actividad 1 · Observa.</b> Pon un vaso con hielo al sol y describe qué aparece por fuera.</p><p><b>Actividad 2 · Dibuja.</b> Ilustra las 4 etapas: evaporación, condensación, precipitación y escorrentía.</p><p><b>Actividad 3 · Explica.</b> En parejas, cuenta el viaje de una gota desde el río hasta la nube.</p>';
+    var d=$('#cvDoc');d.innerHTML='';var tmp=document.createElement('div');tmp.innerHTML=html;var kids=[].slice.call(tmp.children),k=0;(function add(){if(k<kids.length){d.appendChild(kids[k++]);setTimeout(add,320)}})();
+    setStep(4);award('cvsim',8,'Abriste Canvas')};
+  $('#cvReset').onclick=reset;reset();
+})();
+
+/* ================= ANATOMY ================= */
+(function(){
+  var H={
+   ver:['Versiones anterior / siguiente','Navega entre versiones guardadas del documento. Ideal para volver atrás si un cambio no te gustó.'],
+   code:['Código','Abre el código de una app y edítalo directamente. Dentro, «Mostrar cambios recientes» te enseña qué se modificó.'],
+   console:['Mostrar consola','Muestra errores y registros (logs) de la vista previa de la app. Útil para depurar.'],
+   create:['Crear','Convierte un documento en presentación, visual personalizado, app, Audio Overview, quiz, infografía o página web. También agrega LaTeX.'],
+   share:['Compartir y exportar','Comparte un enlace público, exporta a Google Docs o Slides (o PDF), copia el contenido o exporta Python a Colab.'],
+   toolbar:['Barra de formato','Títulos, negrita, cursiva, viñetas y listas numeradas. Si no ves todo, busca «Más».'],
+   select:['Seleccionar texto','Selecciona un fragmento con el cursor y escribe en el cuadro qué cambiar. Con «Sugerir ediciones» Gemini propone mejoras.'],
+   len:['Cambiar longitud','Acorta o alarga el texto sin escribir un prompt nuevo.'],
+   tone:['Cambiar tono','Hazlo más casual o más formal con un clic.'],
+   ask:['Seleccionar y preguntar (apps)','En apps: activa el cursor, selecciona una sección de la interfaz y pide el cambio solo para ella.'],
+   ai:['Agregar funciones de Gemini','Añade a tu app funciones con IA, como generar texto o imágenes. Requiere ser mayor de 18.']
+  };
+  var seen={};
+  $$('.hs').forEach(function(el){el.onclick=function(e){e.stopPropagation();$$('.hs').forEach(function(x){x.classList.remove('on')});el.classList.add('on');var h=H[el.dataset.h];seen[el.dataset.h]=1;var n=Object.keys(seen).length;
+    $('#anatDetail').innerHTML='<span class="tag gold">'+n+' / 11 descubiertos</span><h3 style="margin-top:12px">'+h[0]+'</h3><p class="small" style="margin-top:6px">'+h[1]+'</p><div class="meter" style="margin-top:14px"><i style="width:'+(n/11*100)+'%;background:var(--grad)"></i></div>';
+    if(n>=11)award('anat',10,'Dominas el panel')}});
+})();
+
+/* ================= EDIT DEMO ================= */
+(function(){
+  var T=[
+   ['¡Hola, familias! El viernes vamos al Jardín Botánico. 🌿 Firmen la autorización, porfa.','¡Hola, familias! El próximo viernes vamos de salida pedagógica al Jardín Botánico. Salimos a las 7:00 a. m. y volvemos a la 1:00 p. m. Por favor envíen la autorización firmada antes del miércoles. ¡Va a estar increíble!','¡Hola, familias! Les contamos que el próximo viernes haremos una salida pedagógica al Jardín Botánico para conocer de cerca las plantas que estudiamos en Ciencias. Salimos a las 7:00 a. m. y regresamos a la 1:00 p. m. Los chicos deben llevar uniforme de educación física, gorra, agua y refrigerio. Por favor envíen la autorización firmada antes del miércoles. ¡Gracias por acompañarnos!'],
+   ['Salida pedagógica al Jardín Botánico: viernes, 7:00 a. m. a 1:00 p. m. Enviar autorización.','Les informamos que el próximo viernes realizaremos una salida pedagógica al Jardín Botánico, de 7:00 a. m. a 1:00 p. m. Solicitamos enviar la autorización firmada a más tardar el miércoles.','Les informamos que el próximo viernes realizaremos una salida pedagógica al Jardín Botánico, de 7:00 a. m. a 1:00 p. m., como parte del proyecto de Ciencias Naturales. Los estudiantes deben asistir con uniforme de educación física, gorra, agua y refrigerio. Solicitamos enviar la autorización firmada a más tardar el miércoles. Sin autorización, el estudiante permanecerá en el colegio con actividades asignadas.'],
+   ['Se informa salida pedagógica al Jardín Botánico el viernes. Se requiere autorización firmada.','Apreciados padres de familia: nos permitimos informar que el próximo viernes se realizará una salida pedagógica al Jardín Botánico, entre las 7:00 a. m. y la 1:00 p. m. Agradecemos remitir la autorización firmada antes del miércoles.','Apreciados padres de familia: Nos permitimos informar que el próximo viernes se realizará una salida pedagógica al Jardín Botánico, entre las 7:00 a. m. y la 1:00 p. m., en el marco del proyecto del área de Ciencias Naturales. Los estudiantes deberán presentarse con el uniforme de educación física, gorra, hidratación y refrigerio. Agradecemos remitir la autorización debidamente firmada a más tardar el miércoles. Cordialmente, la coordinación académica.']
+  ];
+  var tone=1,len=1,v=1,tried={};
+  function render(){var p=$('#edText');p.style.opacity=0;setTimeout(function(){p.textContent=T[tone][len];p.style.transition='opacity .3s';p.style.opacity=1},120);$('#edV').textContent=v;$('#edSug').innerHTML='';tried[tone+'-'+len]=1;if(Object.keys(tried).length>=4)award('edit',6,'Editor ágil')}
+  function seg(id,cb){$$('#'+id+' button').forEach(function(b){b.onclick=function(){$$('#'+id+' button').forEach(function(x){x.classList.remove('on')});b.classList.add('on');cb(+b.dataset.v);v++;render()}})}
+  seg('edTone',function(x){tone=x});seg('edLen',function(x){len=x});
+  $('#edSugB').onclick=function(){$('#edSug').innerHTML=['Indica el punto de encuentro y la hora exacta de llegada al colegio.','Aclara qué pasa si un estudiante no trae la autorización.','Incluye un teléfono de contacto para el día de la salida.'].map(function(s){return '<div class="callout blue small" style="padding:8px 12px"><span>✎</span><div>'+s+'</div></div>'}).join('');award('sug',3)};
+  render();
+})();
+
+/* ================= TRANSFORM ================= */
+(function(){
+  var P={
+   web:function(){return '<div class="web"><div class="hero"><b>El viaje de una gota</b><span>Ciencias Naturales · Grado 5.°</span></div><div class="cols"><div><b>☀️ Evaporación</b><br>El sol calienta el agua</div><div><b>☁️ Condensación</b><br>Se forman las nubes</div><div><b>🌧️ Precipitación</b><br>Vuelve como lluvia</div></div><div style="padding:0 14px 14px;font-size:.82rem">Actividad: dibuja el recorrido de una gota desde el río Quindío hasta una nube.</div></div>'},
+   info:function(){return '<div class="info"><div class="k"><b>97%</b><span class="small">del agua es salada</span></div><div class="k"><b>&lt;3%</b><span class="small">es agua dulce</span></div><div class="k"><b>4</b><span class="small">etapas del ciclo</span></div></div><div class="stack" style="margin-top:14px"><div><span class="small">Agua salada (océanos)</span><div class="bar"><i data-w="97"></i></div></div><div><span class="small">Agua dulce</span><div class="bar"><i data-w="3"></i></div></div></div>'},
+   quiz:function(){return '<div class="stack"><div class="card"><div class="mcq" id="tq1"></div></div><div class="card"><div class="mcq" id="tq2"></div></div></div>'},
+   audio:function(){var w='';for(var i=0;i<48;i++)w+='<i></i>';return '<div class="card"><div class="row"><button class="btn pri sm" id="auP">▶ Reproducir</button><span class="small">Audio Overview · conversación entre dos voces (simulada)</span></div><div class="wave" id="auW" style="margin:12px 0">'+w+'</div><div class="tr" id="auT"><p>🎙️ A: ¿Sabías que el agua que tomas hoy pudo estar en una nube la semana pasada?</p><p>🎙️ B: ¡Claro! El sol la evapora, se condensa en nubes y vuelve como lluvia.</p><p>🎙️ A: Y lo más sorprendente: casi toda el agua del planeta es salada.</p><p>🎙️ B: Por eso hay que cuidar los ríos y quebradas de nuestra región.</p></div></div>'},
+   slides:function(){return '<div class="slide-mini" id="slm"></div><div class="row" style="margin-top:10px;justify-content:center"><button class="btn sm" id="slP">‹</button><span class="small" id="slN"></span><button class="btn sm" id="slX">›</button></div>'},
+   latex:function(){return '<div class="grid g2"><pre class="code">\\[ \\rho = \\frac{m}{V} \\]\n\\[ \\rho_{agua} = \\frac{1000\\,\\text{g}}{1000\\,\\text{cm}^3} = 1\\,\\text{g/cm}^3 \\]</pre><div class="card" style="display:grid;place-items:center;font-family:Georgia,serif;font-size:1.15rem;text-align:center;line-height:2">ρ = <i>m</i> / <i>V</i><br>ρ<sub>agua</sub> = 1000 g / 1000 cm³ = <b>1 g/cm³</b></div></div><p class="small" style="margin-top:10px">Ideal para guías de Matemáticas, Física o Química. Un documento con LaTeX se exporta como PDF.</p>'}
+  };
+  MCQ.tq1={q:'¿Qué etapa forma las nubes?',o:['Evaporación','Condensación','Escorrentía'],a:1,f:'En la condensación el vapor se enfría y forma nubes.'};
+  MCQ.tq2={q:'¿Cuánta agua del planeta es salada?',o:['Cerca del 97%','La mitad','Cerca del 10%'],a:0,f:'Casi el 97% está en los océanos.'};
+  var seen={};
+  function show(t){$('#trPane').innerHTML=P[t]();seen[t]=1;if(Object.keys(seen).length>=6)award('trans',8,'Seis formatos');
+    $$('#trPane .bar i').forEach(function(b){setTimeout(function(){b.style.width=b.dataset.w+'%'},80)});
+    if(t==='quiz'){renderMCQ($('#tq1'),'tq1');renderMCQ($('#tq2'),'tq2')}
+    if(t==='audio'){var iv=null;$('#auP').onclick=function(){var btn=this;if(iv){clearInterval(iv);iv=null;btn.textContent='▶ Reproducir';return}btn.textContent='❚❚ Pausar';var k=0,bars=$$('#auW i'),ps=$$('#auT p');iv=setInterval(function(){bars.forEach(function(b){b.style.height=(15+Math.random()*85)+'%'});ps.forEach(function(p,i){p.classList.toggle('on',i===Math.floor(k/12)%ps.length)});k++;if(!document.body.contains(btn)){clearInterval(iv)}},120)}}
+    if(t==='slides'){var S=[['El viaje de una gota','Ciencias Naturales · Grado 5.°'],['Evaporación → Condensación','El sol calienta, el aire enfría'],['Reto para casa','Mide cuánta agua usa tu familia en un día']],i=0;function r(){$('#slm').innerHTML='<span class="tag gold">Diapositiva '+(i+1)+'</span><b>'+S[i][0]+'</b><span class="small">'+S[i][1]+'</span>';$('#slN').textContent=(i+1)+' / 3'}$('#slP').onclick=function(){i=(i+2)%3;r()};$('#slX').onclick=function(){i=(i+1)%3;r()};r()}
+  }
+  $$('#trTabs button').forEach(function(b){b.onclick=function(){$$('#trTabs button').forEach(function(x){x.classList.remove('on')});b.classList.add('on');show(b.dataset.t)}});
+  show('web');
+})();
+
+/* ================= APP DEMO ================= */
+(function(){
+  var logs=['[info] App cargada'],tab='prev';
+  var code='<!-- index.html (fragmento) -->\n<label>Quices (20%)</label>\n<input type="range" id="q" min="10" max="50">\n<label>Talleres (30%)</label>\n<input type="range" id="t" min="10" max="50">\n<label>Parcial (20%)</label>\n<input type="range" id="p" min="10" max="50">\n<label>Examen final (30%)</label>\n<input type="range" id="f" min="10" max="50">\n\n<script>\nfunction calcular(){\n  const nota = q*0.2 + t*0.3 + p*0.2 + f*0.3;\n  resultado.textContent = nota.toFixed(1);\n  estado.textContent = nota >= 3 ? "Aprueba" : "No aprueba";\n  console.log("Nota definitiva:", nota);\n}\n<\/script>';
+  var F=[['q','Quices · 20%',.2],['t','Talleres · 30%',.3],['p','Parcial · 20%',.2],['f','Examen final · 30%',.3]];
+  var vals={q:38,t:42,p:29,f:33};
+  function calc(){var n=0;F.forEach(function(f){n+=vals[f[0]]/10*f[2]});return n}
+  function paint(){var n=calc();$('#apR').textContent=n.toFixed(1).replace('.',',');var ok=n>=3;$('#apS').textContent=ok?'✅ Aprueba':'⚠️ No aprueba: necesita refuerzo';$('#apRes').style.background=ok?'linear-gradient(120deg,#047857,#0e7490)':'linear-gradient(120deg,#b45309,#be123c)'}
+  function pane(){
+    if(tab==='prev'){$('#apPane').innerHTML='<div class="appbox"><b>📒 Calculadora de notas del periodo</b><p style="font-size:.78rem;color:#475569;margin:2px 0 4px">Escala 1,0 a 5,0 · aprueba con 3,0 · estudiante de ejemplo</p>'+
+      F.map(function(f){return '<label>'+f[1]+': <b id="v_'+f[0]+'">'+(vals[f[0]]/10).toFixed(1).replace('.',',')+'</b></label><input type="range" data-k="'+f[0]+'" min="10" max="50" value="'+vals[f[0]]+'" aria-label="'+f[1]+'">'}).join('')+
+      '<div class="res" id="apRes">Nota definitiva<br><b id="apR"></b> <span id="apS" style="font-weight:700;margin-left:6px"></span></div></div>';
+      paint();
+      $$('#apPane input').forEach(function(r){r.oninput=function(){vals[r.dataset.k]=+r.value;$('#v_'+r.dataset.k).textContent=(r.value/10).toFixed(1).replace('.',',');paint();logs.push('[log] Nota definitiva: '+calc().toFixed(2));if(logs.length>40)logs.shift();award('app',5,'Usaste la app')}})}
+    else if(tab==='code'){$('#apPane').innerHTML='<pre class="code" style="max-height:330px;font-size:.76rem">'+esc(code)+'</pre>'}
+    else if(tab==='cons'){$('#apPane').innerHTML='<div class="console mono">'+logs.map(function(l){return '<div>'+esc(l)+'</div>'}).join('')+'<div class="w">[warn] Revisa que los porcentajes sumen 100%</div></div>';award('cons',2)}
+    else{$('#apPane').innerHTML='<div class="diff mono"><div class="d">resultado.textContent = nota;</div><div class="a">resultado.textContent = nota.toFixed(1);</div><div class="a">estado.textContent = nota &gt;= 3 ? "Aprueba" : "No aprueba";</div><div class="d">&lt;input id="f" max="100"&gt;</div><div class="a">&lt;input id="f" min="10" max="50"&gt;</div></div><p class="small" style="margin-top:10px">«Mostrar cambios recientes» (dentro de Código) resalta lo que Gemini modificó en la última edición.</p>'}
+  }
+  $$('#apTabs button').forEach(function(b){b.onclick=function(){$$('#apTabs button').forEach(function(x){x.classList.remove('on')});b.classList.add('on');tab=b.dataset.t;pane()}});
+  $('#apAI').onclick=function(){modal('<h3>✦ Agregar funciones de Gemini</h3><p class="small" style="margin-top:8px">En el chat, Gemini explica qué función de IA agregó. Ejemplo para esta app:</p><div class="gm-msg a" style="margin-top:10px;max-width:100%">Agregué un botón «Sugerir plan de refuerzo»: según las notas más bajas, propone 3 actividades para que el estudiante mejore. ¿Quieres que también redacte un mensaje para el acudiente?</div><p class="small" style="margin-top:10px">Requisitos: sesión iniciada y ser mayor de 18. Tus estudiantes menores de edad no podrán usar esta función.</p>');award('appai',3)};
+  pane();
+})();
+
+/* ================= EXPORT MATRIX ================= */
+(function(){
+  var cols=['Google Docs','Google Slides','PDF','Copiar','Colab','Enlace público'];
+  var rows=[['📄 Documento',['✅','—','🟡','✅','—','✅']],['🖼️ Diapositivas',['—','✅','✅','—','—','✅']],['🧮 App',['—','—','—','✅','—','✅']],['🐍 Python',['—','—','—','✅','✅','—']]];
+  var notes={'0-2':'PDF disponible para documentos con LaTeX (con vista previa).','2-5':'Quien tenga el enlace puede ver y editar los datos de la app.','1-2':'Las diapositivas pueden exportarse como PDF.','3-4':'Botón «Exportar a Colab» arriba del panel.'};
+  var t=$('#mx');t.innerHTML='<tr><th></th>'+cols.map(function(c){return '<th>'+c+'</th>'}).join('')+'</tr>'+rows.map(function(r,i){return '<tr data-r="'+i+'"><td>'+r[0]+'</td>'+r[1].map(function(v,j){return '<td class="'+(v==='✅'?'y':v==='🟡'?'p':'')+'" data-k="'+i+'-'+j+'" title="'+(notes[i+'-'+j]||'')+'">'+v+'</td>'}).join('')+'</tr>'}).join('');
+  $$('#mx td[data-k]').forEach(function(td){td.onclick=function(){var n=notes[td.dataset.k];if(n)toast(n)}});
+  $$('#mxSel button').forEach(function(b){b.onclick=function(){$$('#mxSel button').forEach(function(x){x.classList.remove('on')});b.classList.add('on');var r=+b.dataset.r;$$('#mx tr[data-r]').forEach(function(tr){var k=+tr.dataset.r;tr.classList.toggle('dim',r>-1&&k!==r);tr.classList.toggle('sel',k===r)});award('mx',2)}});
+})();
+
+/* ================= PROMPT LAB ================= */
+(function(){
+  function build(){
+    var p='Crea '+$('#plType').value+' sobre '+($('#plTopic').value||'[tema]')+', dirigida a '+$('#plAud').value+'.\n\n';
+    p+='• Tono: '+$('#plTone').value+'.\n• Idioma: '+$('#plLang').value+'.\n';
+    if($('#plEx').checked)p+='• Incluye ejemplos de la vida diaria en el Quindío.\n';
+    if($('#plBrand').checked)p+='• Usa frases cortas, vocabulario sencillo e íconos de apoyo para estudiantes con dificultades de lectura.\n';
+    if($('#plQ').checked)p+='• Termina con 3 preguntas de reflexión para la clase.\n';
+    p+='• Si te falta información, pregúntame antes de inventar datos.';
+    $('#plOut').textContent=p;
+  }
+  ['plType','plAud','plTopic','plTone','plLang','plEx','plBrand','plQ'].forEach(function(id){var e=document.getElementById(id);e.addEventListener('input',build);e.addEventListener('change',build)});
+  $('#plCopy').onclick=function(){copyText($('#plOut').textContent,this);award('pl',4,'Prompt copiado')};
+  build();
+  var R=[['🖼️ Presentación de clase','Crea una presentación de 8 diapositivas para explicar [tema] a estudiantes de grado [X]. Una idea por diapositiva, una pregunta para la clase en cada una y notas para el docente.'],['🎮 Juego','Crea un juego interactivo para practicar [tema] con estudiantes de grado [X]. Que tenga 10 retos, puntaje, retroalimentación inmediata y un botón para reiniciar.'],['❓ Quiz','A partir del documento que adjunto, crea un quiz de 10 preguntas de opción múltiple para grado [X], con retroalimentación en cada respuesta.'],['📄 Guía de trabajo','Redacta una guía de trabajo de 1 página sobre [tema] para grado [X]: objetivo de aprendizaje, explicación corta, 3 actividades y autoevaluación.'],['📏 Rúbrica','Crea una rúbrica para evaluar [actividad] en grado [X], con 4 criterios y 4 niveles de desempeño (bajo, básico, alto, superior).'],['∑ Matemáticas con LaTeX','Crea un taller de Matemáticas en LaTeX sobre [tema] con 2 ejemplos resueltos paso a paso y 6 ejercicios para practicar.']];
+  $('#recipes').innerHTML=R.map(function(r,i){return '<div class="card"><div class="row" style="justify-content:space-between"><b>'+r[0]+'</b><button class="btn sm" data-rc="'+i+'">⧉</button></div><p class="small" style="margin-top:6px">'+esc(r[1])+'</p></div>'}).join('');
+  $$('[data-rc]').forEach(function(b){b.onclick=function(){copyText(R[+b.dataset.rc][1],b);award('rc',2)}});
+})();
+
+/* ================= STEPPERS ================= */
+var STEPPERS={
+ gem:[
+  ['Abre Gems','En gemini.google.com abre la barra lateral y entra a <b>Gems</b> (o «Explorar Gems»).','<div class="cv-doc"><div class="row"><span class="cv-b">☰</span><b>Gems</b></div><div class="grid g3" style="margin-top:10px"><div class="card small">💡 Lluvia de ideas</div><div class="card small">🧭 Guía profesional</div><div class="card small">✍️ Editor</div></div></div>'],
+  ['Nueva Gem','Haz clic en <b>Nueva Gem</b> para abrir el editor.','<div class="cv-doc"><div class="row" style="justify-content:space-between"><b>Mis Gems</b><span class="btn pri sm pulse-hl">+ Nueva Gem</span></div></div>'],
+  ['Nombre','Dale un nombre claro que diga para qué sirve.','<div class="cv-doc"><label class="f">Nombre</label><input type="text" value="Diseñador de rúbricas" readonly class="pulse-hl"></div>'],
+  ['Instrucciones','Escribe Persona, Tarea, Contexto y Formato. Puedes pedir a Gemini que mejore tus instrucciones.','<div class="cv-doc"><label class="f">Instrucciones</label><textarea readonly class="pulse-hl">Eres un docente experto en evaluación…</textarea></div>'],
+  ['Conocimiento','Opcional: sube archivos de referencia (plantillas, manuales).','<div class="cv-doc"><label class="f">Conocimiento</label><div class="card small pulse-hl">📄 decreto-1290.pdf · 📄 sistema-evaluacion-colegio.pdf</div></div>'],
+  ['Vista previa','Prueba la Gem en el panel derecho antes de guardar. Ajusta si algo no sale como esperas.','<div class="cv-doc"><div class="gm-msg u">Rúbrica para exposición de Ciencias, grado 7.°</div><div class="gm-msg a pulse-hl">Criterio · Bajo · Básico · Alto · Superior …</div></div>'],
+  ['Guardar','Haz clic en <b>Guardar</b>. La Gem queda en tu lista y la puedes usar también en la app móvil.','<div class="cv-doc" style="text-align:center"><span class="btn pri pulse-hl">Guardar</span><p class="small" style="margin-top:10px">✓ Diseñador de rúbricas guardado</p></div>']
+ ],
+ mig:[
+  ['Abre la Gem','En gemini.google.com → barra lateral → <b>Gems</b> → junto a tu Gem, clic en <b>Editar</b>.','<div class="cv-doc"><div class="row" style="justify-content:space-between"><b>Diseñador de rúbricas</b><span class="cv-b pulse-hl">✎ Editar</span></div></div>'],
+  ['Descarga el conocimiento','Descarga cada archivo de «Conocimiento». Crea una carpeta con el nombre de la skill en minúsculas y con guiones, y guarda ahí los archivos.','<pre class="code">crear-rubrica/\n├── decreto-1290.pdf\n└── sistema-evaluacion-colegio.pdf</pre>'],
+  ['Crea la skill manualmente','En otra pestaña: Configuración → <b>Skills</b> → <b>Crear manualmente</b>. Copia nombre, descripción e instrucciones de la Gem. El nombre se ajusta solo al formato correcto. Clic en <b>Crear</b>.','<div class="cv-doc"><span class="btn pri sm pulse-hl">Crear manualmente</span></div>'],
+  ['Descarga la skill','Si tenías archivos: en la skill, <b>Acciones → Descargar</b>. Obtienes un .zip con el SKILL.md.','<div class="cv-doc"><span class="cv-b pulse-hl">⋮ Descargar</span> → <span class="mono">crear-rubrica.zip</span></div>'],
+  ['Une todo en la carpeta','Saca el SKILL.md del .zip y muévelo a la carpeta con los archivos de la Gem.','<pre class="code">crear-rubrica/\n├── SKILL.md   ← nuevo\n├── decreto-1290.pdf\n└── sistema-evaluacion-colegio.pdf</pre>'],
+  ['Reemplaza la skill','En la misma skill: <b>Acciones → Reemplazar skill</b> → elige la <b>carpeta</b> → Subir. El nombre de la carpeta debe coincidir con el de la skill.','<div class="cv-doc"><span class="cv-b pulse-hl">⋮ Reemplazar skill</span><p class="small" style="margin-top:10px">✓ La skill ahora incluye los archivos.</p></div>']
+ ]
+};
+$$('[data-stepper]').forEach(function(host){
+  var S=STEPPERS[host.dataset.stepper],i=0,id=host.dataset.stepper;
+  host.innerHTML='<div class="split" style="align-items:start"><ol class="steps">'+S.map(function(s){return '<li><div><b>'+s[0]+'</b><br><span class="small">'+s[1]+'</span></div></li>'}).join('')+'</ol><div class="stack"><div class="gm"><div class="gm-top"><i></i><i></i><i></i><span class="u">gemini.google.com</span></div><div class="st-mock" style="min-height:200px;padding:6px"></div></div><p class="disclaim">Simulación ilustrativa.</p><div class="row"><button class="btn sm st-p">‹ Anterior</button><button class="btn pri sm st-n">Siguiente ›</button><span class="small st-c"></span></div></div></div>';
+  function r(){$$('.steps li',host).forEach(function(li,k){li.classList.toggle('cur',k===i);li.classList.toggle('ok',k<i)});$('.st-mock',host).innerHTML=S[i][2];$('.st-c',host).textContent='Paso '+(i+1)+' de '+S.length;$('.st-p',host).disabled=i===0;$('.st-n',host).textContent=i===S.length-1?'✓ Terminar':'Siguiente ›';}
+  $('.st-p',host).onclick=function(){if(i>0){i--;r()}};
+  $('.st-n',host).onclick=function(){if(i<S.length-1){i++;r()}else{award('step_'+id,6,'Proceso completo')}};
+  $$('.steps li',host).forEach(function(li,k){li.style.cursor='pointer';li.onclick=function(){i=k;r()}});
+  r();
+});
+
+/* ================= GEM BUILDER ================= */
+(function(){
+  var ex={P:'Eres un docente experto en evaluación por competencias y en diseñar rúbricas claras.',T:'Crea rúbricas para evaluar trabajos de los estudiantes, sin inventar criterios que el docente no haya pedido.',C:'Trabajo en un colegio de Armenia, Quindío. Evaluamos en escala de 1,0 a 5,0 con desempeños bajo, básico, alto y superior, según el Decreto 1290 de 2009.',F:'Entrega una tabla con: criterio, y una columna por nivel de desempeño. Si falta el grado o la actividad, pregúntame antes de crearla.'};
+  var ids=['P','T','C','F'],lab={P:'## Persona',T:'## Tarea',C:'## Contexto',F:'## Formato'};
+  function r(){var out='',n=0;ids.forEach(function(k){var v=$('#g'+k).value.trim();if(v){n++;out+=lab[k]+'\n'+v+'\n\n'}});$('#gOut').textContent=out||'Empieza a escribir…';
+    $('#gScoreT').textContent=n+'/4';var m=$('#gMeter');m.style.width=(n/4*100)+'%';m.style.background=n<2?'var(--red)':n<4?'var(--gold)':'var(--green)';
+    var P=$('#gP').value,F=$('#gF').value,T=$('#gT').value;
+    var c=[[/^\s*(eres|actúa|actua)/i.test(P),'La persona empieza con «Eres…» o «Actúa como…»'],[T.length>25,'La tarea es concreta (más de 25 caracteres)'],[/secci|tabla|viñeta|lista|formato|estructura/i.test(F),'El formato define estructura (secciones, tabla, lista)'],[/invent|pregunt|por definir|falta/i.test(T+F),'Dice qué hacer si falta información']];
+    $('#gChk').innerHTML=c.map(function(x){return '<div class="'+(x[0]?'ok':'ko')+'">'+x[1]+'</div>'}).join('');
+    if(n===4&&c.every(function(x){return x[0]}))award('gem',8,'Instrucciones de nivel experto');}
+  ids.forEach(function(k){$('#g'+k).addEventListener('input',r)});
+  $('#gEx').onclick=function(){ids.forEach(function(k){$('#g'+k).value=ex[k]});r()};
+  $('#gClr').onclick=function(){ids.forEach(function(k){$('#g'+k).value=''});r()};
+  $('#gCopy').onclick=function(){copyText($('#gOut').textContent,this)};
+  r();
+})();
+
+/* ================= TIMELINE ================= */
+(function(){
+  var E=[['30 sep 2026','Anuncio','Google lanza las skills en el chat de Gemini y anuncia que reemplazarán a las Gems. Ya no se pueden crear flujos de Workspace Studio con el paso «Ask a Gem» (los existentes siguen funcionando).'],
+   ['5 oct 2026','Workspace','Empieza el despliegue de skills en Workspace. El 13-oct Google informó que el lanzamiento en Workspace Studio y apps de Workspace se retrasó.'],
+   ['13 oct 2026','App Gemini','Empieza el despliegue de skills en la app de Gemini; se espera completar a mediados de noviembre.',1],
+   ['17 nov 2026','Configuración','Las Gems pasan al panel de Configuración de la app de Gemini. Todavía se pueden crear, editar y usar.'],
+   ['Nov 2026','Personales','Retiro de Gems en cuentas personales. También se apagan Opal y las Gems de Google Labs (estas no se migran).'],
+   ['≥ 1 mar 2027','Empresas','Workspace empresas y ONG: no se pueden crear, editar ni usar Gems. Las restantes se migran a borradores de skills.'],
+   ['≥ 1 jun 2027','Educación','Workspace educación: retiro de Gems también en Classroom y LMS con Gemini LTI. Migración automática a borradores.']];
+  $('#tl').innerHTML=E.map(function(e,i){return '<button data-i="'+i+'">'+(e[3]?'<span class="today">HOY ≈</span>':'')+'<span class="pin"></span><b>'+e[0]+'</b><small>'+e[1]+'</small></button>'}).join('');
+  var seen={};
+  function s(i){$$('#tl button').forEach(function(b,k){b.classList.toggle('on',k===i)});$('#tlD').innerHTML='<span class="tag gold">'+E[i][0]+'</span><h3 style="margin:10px 0 6px">'+E[i][1]+'</h3><p class="small">'+E[i][2]+'</p>';seen[i]=1;if(Object.keys(seen).length===E.length)award('tl',5,'Conoces el calendario')}
+  $$('#tl button').forEach(function(b){b.onclick=function(){s(+b.dataset.i)}});s(2);
+})();
+
+/* ================= LOAD ANIMATION ================= */
+(function(){
+  var run=false;
+  $('#ldPlay').onclick=function(){if(run)return;run=true;var b=this;b.disabled=true;
+    ['#ld1','#ld2','#ld3'].forEach(function(x){$(x).classList.remove('on')});$$('#ldList .sk').forEach(function(x){x.classList.remove('m','x')});
+    var t=0;function at(ms,f){setTimeout(f,t+=ms)}
+    at(100,function(){$('#ld1').classList.add('on')});
+    $$('#ldList .sk').forEach(function(sk){at(450,function(){sk.classList.add(sk.dataset.k==='m'?'m':'x')})});
+    at(700,function(){$('#ld1').classList.remove('on');$('#ld2').classList.add('on')});
+    at(1300,function(){$('#ld2').classList.remove('on');$('#ld3').classList.add('on')});
+    at(1300,function(){run=false;b.disabled=false;b.textContent='↺ Repetir';award('load',4,'Entiendes la carga progresiva')});};
+})();
+
+/* ================= ANNOTATED SKILL.md ================= */
+(function(){
+  var L=[
+   ['<span class="c">---</span>','Inicio del encabezado','El bloque entre las dos líneas <b>---</b> son los metadatos. Gemini los lee primero (nivel 1).'],
+   ['<span class="k">name:</span> <span class="s">planear-clase</span>','name','Minúsculas y guiones. Empieza con un verbo: describe lo que <b>hace</b>, no lo que es. Evita palabras vagas como «helper», «tools» o «data».'],
+   ['<span class="k">description:</span> <span class="s">Diseña planeaciones de clase con objetivo, momentos y evaluación formativa. Úsala cuando se pida planear una clase, una sesión o una secuencia didáctica.</span>','description','1–2 oraciones en tercera persona: qué hace + «Úsala cuando…» con situaciones concretas. Máximo 1024 caracteres. Decide si Gemini usa o no la skill.'],
+   ['<span class="c">---</span>','Fin del encabezado','A partir de aquí van las instrucciones (nivel 2), que Gemini solo lee si la skill es relevante.'],
+   ['# Pasos\n1. Escribe el objetivo de aprendizaje.\n2. Divide la clase en inicio, desarrollo y cierre.\n3. Propón una evaluación formativa.','Pasos','Instrucciones breves y accionables. Piensa en «acordeón», no en «manual».'],
+   ['# Formato\nTabla: Momento | Tiempo | Actividad | Recursos','Plantilla de salida','Las plantillas mejoran la precisión del formato. Define secciones y orden exactos.'],
+   ['# Errores comunes\n- No superes el tiempo total de la clase.\n- No uses nombres reales de estudiantes.','Errores comunes','Una sección explícita de lo que nunca debe pasar.'],
+   ['# Si falta información\nSi no sé el grado o la duración, pregúntame.','Información faltante','Evita que Gemini invente o se salte datos.'],
+   ['Usa el formato de <span class="s">formato-planeacion.md</span>','Archivo de referencia','Gemini abre los archivos solo cuando los necesita (nivel 3).']
+  ];
+  $('#anno').innerHTML=L.map(function(l,i){return '<span data-i="'+i+'">'+l[0]+'</span>'}).join('');
+  var seen={};
+  $$('#anno span[data-i]').forEach(function(sp){sp.onclick=function(){$$('#anno span[data-i]').forEach(function(x){x.classList.remove('on')});sp.classList.add('on');var l=L[+sp.dataset.i];seen[sp.dataset.i]=1;$('#annoD').innerHTML='<span class="tag gold">'+Object.keys(seen).length+' / '+L.length+'</span><h3 style="margin-top:10px">'+l[1]+'</h3><p class="small" style="margin-top:6px">'+l[2]+'</p>';if(Object.keys(seen).length===L.length)award('anno',6,'Lees SKILL.md como experto')}});
+})();
+
+/* ================= SKILL BUILDER ================= */
+(function(){
+  var EX={
+   acta:['planear-clase','Diseña planeaciones de clase con objetivo de aprendizaje, momentos (inicio, desarrollo y cierre) y evaluación formativa. Úsala cuando se pida planear una clase, una sesión o una secuencia didáctica.','## Pasos\n1. Escribe un objetivo de aprendizaje medible.\n2. Divide la clase en inicio, desarrollo y cierre con tiempos.\n3. Propón una actividad de evaluación formativa.'],
+   post:['redactar-circular-padres','Redacta circulares y comunicados para padres de familia con fecha, propósito, indicaciones y fecha límite de respuesta. Úsala cuando se pida informar a las familias sobre salidas, reuniones, eventos o tareas.','## Pasos\n1. Saluda con respeto y explica el propósito en una frase.\n2. Lista fecha, hora, lugar e indicaciones.\n3. Cierra con la fecha límite y un contacto.'],
+   bad:['Ayudante de Clases','Puedo ayudarte con lo que necesites para tus clases.','haz cosas buenas']
+  };
+  var vague=['helper','tools','tool','data','ayudante','herramienta','herramientas','datos','cosas','general','varios'];
+  var verbs=/^(redactar|crear|convertir|analizar|resumir|preparar|generar|revisar|traducir|planear|planificar|calcular|evaluar|transformar|escribir|disenar|clasificar|extraer|comparar|draft|create|write|plan|summarize|analyze|generate|review|convert|build|make|tailor|repurpose)/;
+  function r(){
+    var n=$('#sbN').value.trim(),d=$('#sbD').value.trim(),ins=$('#sbI').value.trim();
+    $('#sbDc').textContent=d.length;
+    var md='---\nname: '+n+'\ndescription: '+d+'\n---\n\n'+ins+'\n';
+    if($('#sbF').checked)md+='\n## Formato de salida\n[Define aquí las secciones exactas, en orden]\n';
+    if($('#sbE').checked)md+='\n## Errores comunes\n- No inventes datos que no estén en la entrada.\n- No incluyas información personal no solicitada.\n';
+    if($('#sbM').checked)md+='\n## Si falta información\nSi falta un dato necesario, pregúntame en lugar de suponerlo.\n';
+    $('#sbOut').textContent=md;
+    var c=[
+     [/^[a-z0-9]+(-[a-z0-9]+)*$/.test(n),'Nombre en minúsculas con guiones (my-new-skill)','Usa solo minúsculas, números y guiones.'],
+     [verbs.test(n),'El nombre empieza con un verbo de acción','Ej.: redactar-, crear-, analizar-'],
+     [n&&!vague.some(function(v){return n.split('-').indexOf(v)>-1}),'Sin palabras vagas (helper, tools, data, datos…)','Sé específico.'],
+     [d.length>=40&&d.length<=1024,'Descripción entre 40 y 1024 caracteres','Ahora: '+d.length],
+     [/(úsala|usala|úsalo|usalo|úsese|use when|usar cuando)/i.test(d),'Incluye «Úsala cuando…» con situaciones','Así Gemini sabe cuándo activarla.'],
+     [d&&!/(\bpuedo\b|\bte ayudo\b|\bpuedes usar\b|\bi can\b|\byou can\b|\bmi\b|\byo\b)/i.test(d),'Tercera persona (sin «puedo», «te ayudo»)','Describe qué hace la skill.'],
+     [ins.length>=40,'Instrucciones con pasos concretos','Añade pasos numerados.'],
+     [$('#sbF').checked&&$('#sbE').checked&&$('#sbM').checked,'Incluye formato, errores comunes e información faltante','Activa las tres casillas.']
+    ];
+    var ok=c.filter(function(x){return x[0]}).length,pct=Math.round(ok/c.length*100);
+    $('#sbChk').innerHTML=c.map(function(x){return '<div class="'+(x[0]?'ok':'ko')+'"><span><b>'+x[1]+'</b>'+(x[0]?'':'<br><span class="small">'+x[2]+'</span>')+'</span></div>'}).join('');
+    $('#sbScore').textContent=pct+'%';var m=$('#sbMeter');m.style.width=pct+'%';m.style.background=pct<50?'var(--red)':pct<100?'var(--gold)':'var(--green)';
+    $('#sbDl').disabled=!n;$('#sbCp').disabled=!n;
+    if(pct===100)award('sb',12,'Skill perfecta');
+  }
+  ['sbN','sbD','sbI','sbF','sbE','sbM'].forEach(function(id){var e=document.getElementById(id);e.addEventListener('input',r);e.addEventListener('change',r)});
+  $$('[data-sb]').forEach(function(b){b.onclick=function(){var e=EX[b.dataset.sb];$('#sbN').value=e[0];$('#sbD').value=e[1];$('#sbI').value=e[2];r()}});
+  $('#sbDl').onclick=function(){copyText('Crea una skill basada en estas instrucciones. Respeta el nombre y la descripción tal como están:\n\n'+$('#sbOut').textContent,this);award('dl',5,'Skill lista para Gemini')};
+  $('#sbCp').onclick=function(){copyText($('#sbOut').textContent,this)};
+  r();
+})();
+
+/* ================= SLASH SIM ================= */
+(function(){
+  var SK=[['planear-clase','Planeación con inicio, desarrollo y cierre'],['adaptar-inclusion','Ajustes para estudiantes con necesidades educativas'],['crear-rubrica','Rúbrica con 4 niveles de desempeño'],['redactar-circular-padres','Circular clara para las familias'],['formato-tabla','Entrega todo en tablas']];
+  var chosen=[],sel=0,filt=[];
+  var inp=$('#slIn'),menu=$('#slMenu');
+  function chips(){$('#slChips').innerHTML=chosen.map(function(c,i){return '<span class="chip">🧩 /'+c+' <button data-x="'+i+'">✕</button></span>'}).join('');$$('#slChips [data-x]').forEach(function(b){b.onclick=function(){chosen.splice(+b.dataset.x,1);chips()}})}
+  function showMenu(q){filt=SK.filter(function(s){return chosen.indexOf(s[0])<0&&s[0].indexOf(q)>-1});if(!filt.length){menu.classList.add('hide');return}sel=0;menu.innerHTML=filt.map(function(s,i){return '<button data-i="'+i+'" class="'+(i===0?'sel':'')+'"><b class="mono">/'+s[0]+'</b><small>'+s[1]+'</small></button>'}).join('');menu.classList.remove('hide');$$('button',menu).forEach(function(b){b.onmousedown=function(e){e.preventDefault();pick(+b.dataset.i)}})}
+  function pick(i){var s=filt[i];if(!s)return;chosen.push(s[0]);inp.value=inp.value.replace(/\/[\w-]*$/,'');menu.classList.add('hide');chips();if(chosen.length>=2)award('stack',6,'Apilaste skills');inp.focus()}
+  inp.addEventListener('input',function(){var m=inp.value.match(/\/([\w-]*)$/);if(m)showMenu(m[1]);else menu.classList.add('hide')});
+  inp.addEventListener('keydown',function(e){if(menu.classList.contains('hide')){if(e.key==='Enter')send();return}var bs=$$('button',menu);if(e.key==='ArrowDown'){e.preventDefault();sel=(sel+1)%bs.length}else if(e.key==='ArrowUp'){e.preventDefault();sel=(sel-1+bs.length)%bs.length}else if(e.key==='Enter'||e.key==='Tab'){e.preventDefault();pick(sel);return}else if(e.key==='Escape'){menu.classList.add('hide');return}bs.forEach(function(b,i){b.classList.toggle('sel',i===sel)})});
+  inp.addEventListener('blur',function(){setTimeout(function(){menu.classList.add('hide')},150)});
+  function send(){var t=inp.value.trim()||'Clase de fracciones equivalentes, grado 6.°, 55 minutos';var used=chosen.slice();
+    var h='<div class="gm-msg u">'+(used.length?used.map(function(u){return '<span class="gm-chip" style="margin-right:4px">/'+u+'</span>'}).join(''):'')+' '+esc(t)+'</div>';
+    var resp=used.length?'<b>Apliqué '+used.length+' skill'+(used.length>1?'s':'')+':</b> '+used.map(function(u){return '<span class="mono">'+u+'</span>'}).join(' + ')+'.<br>'+used.map(function(u){return {'planear-clase':'📋 Organicé la clase en inicio, desarrollo y cierre con tiempos.','adaptar-inclusion':'🤝 Agregué ajustes de apoyo para estudiantes con necesidades educativas.','crear-rubrica':'📏 Añadí una rúbrica con 4 niveles de desempeño.','redactar-circular-padres':'✉️ Redacté una circular para las familias.','formato-tabla':'▦ Presenté todo en tablas.'}[u]}).join('<br>'):'Respondí sin skills: resultado genérico. 💡 Prueba con «/».';
+    h+='<div class="gm-msg a">'+resp+'</div>';$('#slMsgs').innerHTML=h;inp.value='';if(used.length)award('slash',4,'Invocaste con /')}
+  $('#slSend').onclick=send;$('#slReset').onclick=function(){chosen=[];chips();$('#slMsgs').innerHTML='';inp.value=''};
+})();
+
+/* ================= AUTO TRIGGER ================= */
+(function(){
+  var SK=[
+   {n:'planear-clase',d:'Diseña planeaciones de clase. Úsala cuando se pida planear una clase, una sesión o una secuencia didáctica.',k:['planea','planear','planeación','planeacion','clase','sesión','sesion','secuencia'],on:true},
+   {n:'crear-rubrica',d:'Crea rúbricas con criterios y niveles. Úsala cuando se pida evaluar un trabajo, una exposición o un proyecto.',k:['rúbrica','rubrica','evaluar','exposición','exposicion','criterios'],on:true},
+   {n:'redactar-circular-padres',d:'Redacta circulares para familias. Úsala cuando se pida informar a padres sobre salidas, reuniones o eventos.',k:['circular','padres','familias','acudientes','salida','reunión de padres'],on:true},
+   {n:'generar-quiz',d:'Genera quices con retroalimentación. Úsala cuando se pidan preguntas, evaluaciones cortas o repasos.',k:['quiz','preguntas','repaso','examen'],on:true}
+  ];
+  var PR=['Planea mi clase de fracciones para grado 6.°','Necesito evaluar las exposiciones de grado 9.°','Escribe la circular para los padres sobre la salida al Jardín Botánico','¿Cuál es la capital de Francia?','Planea la clase de mañana y al final incluye un quiz de repaso'];
+  function list(){$('#atSkills').innerHTML=SK.map(function(s,i){return '<div class="card" style="padding:14px'+(s.on?'':';opacity:.45')+'"><div class="row" style="justify-content:space-between"><b class="mono" style="font-size:.86rem">'+s.n+'</b><label class="ck" style="padding:0"><input type="checkbox" data-t="'+i+'" '+(s.on?'checked':'')+'> Activa</label></div><p class="small" style="margin-top:4px">'+s.d+'</p></div>'}).join('');$$('#atSkills [data-t]').forEach(function(c){c.onchange=function(){SK[+c.dataset.t].on=c.checked;list();award('toggle',2)}})}
+  $('#atPresets').innerHTML=PR.map(function(p,i){return '<button class="btn sm" data-p="'+i+'">Ejemplo '+(i+1)+'</button>'}).join('');
+  $$('#atPresets [data-p]').forEach(function(b){b.onclick=function(){$('#atIn').value=PR[+b.dataset.p];go2()}});
+  function go2(){var t=$('#atIn').value.toLowerCase(),hit=[],off=[];
+    SK.forEach(function(s){var m=s.k.filter(function(k){return t.indexOf(k)>-1});if(m.length){(s.on?hit:off).push({s:s,m:m})}});
+    var h='';
+    if(hit.length)h+='<span class="tag green">⚡ Se activa'+(hit.length>1?'n '+hit.length+' skills (apiladas)':' 1 skill')+'</span>'+hit.map(function(x){return '<p style="margin-top:8px"><b class="mono">'+x.s.n+'</b><br><span class="small">Coincide con: '+x.m.map(function(w){return '«'+w+'»'}).join(', ')+'</span></p>'}).join('');
+    else h+='<span class="tag">Sin skills</span><p class="small" style="margin-top:8px">Ninguna descripción activa coincide: Gemini responde normalmente.</p>';
+    if(off.length)h+='<div class="callout gold small" style="margin-top:10px"><span>⏸</span><div><b>'+off.map(function(x){return x.s.n}).join(', ')+'</b> coincide, pero está desactivada: no se usa automáticamente. Si la pides con /, Gemini te preguntará si quieres reactivarla.</div></div>';
+    $('#atOut').innerHTML=h;award('auto',4,'Entiendes la activación')}
+  $('#atGo').onclick=go2;list();
+})();
+
+/* ================= FILE SORTER ================= */
+(function(){
+  var F=[['formato-planeacion.md',1,'Texto plano Markdown: sí.'],['malla-curricular.docx',0,'.docx es binario: conviértelo a PDF, .md o .txt.'],['escudo-colegio.png',1,'Imágenes: sí (.jpg, .png y otras).'],['planilla-notas.xlsx',0,'.xlsx es binario y además tiene datos de estudiantes. No lo subas.'],['estandares-mate.pdf',1,'PDF: sí.'],['armar_grupos.py',1,'Scripts .py y .sh: sí, pero sin acceso a internet.'],['banco-preguntas.csv',1,'CSV: sí. Ideal para preguntas de repaso.'],['.DS_Store',0,'Archivo oculto binario: puede hacer fallar la subida. Elimínalo.'],['clase-fracciones.pptx',0,'.pptx es binario: expórtala a PDF.']];
+  function build(){  var done=0;
+  $('#files').innerHTML=F.map(function(f,i){return '<div class="file" data-i="'+i+'"><b>📄 '+f[0]+'</b><div class="row"><button class="btn sm" data-a="1">✓ Sí entra</button><button class="btn sm" data-a="0">✗ No entra</button></div><div class="fb"></div></div>'}).join('');
+  $$('#files .file').forEach(function(el){$$('button',el).forEach(function(b){b.onclick=function(){if(el.dataset.done)return;el.dataset.done=1;var f=F[+el.dataset.i],ok=(+b.dataset.a)===f[1];el.classList.add(f[1]?'ok':'ko');$('.fb',el).textContent=(ok?'✅ ':'💡 ')+f[2];$$('button',el).forEach(function(x){x.disabled=true});if(ok)done++;if(done>=7)award('files',8,'Experto en archivos')}})});
+  }
+  build();
+  var rb=document.createElement("button");rb.className="btn sm";rb.textContent="↺ Reiniciar juego";rb.style.marginTop="12px";rb.style.alignSelf="flex-start";rb.onclick=function(){build();coliSay("¡De nuevo! Esta vez te sale perfecto. 💪","happy",3000)};$("#files").insertAdjacentElement("afterend",rb);
+})();
+
+/* ================= YES/NO ================= */
+(function(){
+  var Y=[['Cada semana planeas clases con el mismo formato del colegio.',1,'Instrucción repetida y formato fijo: candidato perfecto.'],['Necesitas escribir una sola carta de recomendación este año.',0,'Tarea única: con un buen prompt basta.'],['Siempre corriges a Gemini para que use la escala de 1,0 a 5,0.',1,'Si corriges el formato una y otra vez, crea la skill.'],['El tema de tu proyecto cambia cada semana y no sigue ningún patrón.',0,'Si cambia constantemente, mantener la skill cuesta más de lo que ahorra.'],['Gemini ya explica perfecto qué es la fotosíntesis.',0,'Si ya sale bien sin guía, no hace falta.'],['Combinas a mano Gmail, Docs y Calendar para citar a reunión de padres.',1,'Pasos repetidos entre apps conectadas: buen caso para una skill.']];
+  function build(){  var ok=0;
+  $('#yn').innerHTML=Y.map(function(y,i){return '<div class="card" data-i="'+i+'"><p style="font-weight:650">'+y[0]+'</p><div class="row" style="margin-top:10px"><button class="btn sm" data-a="1">🧩 Skill</button><button class="btn sm" data-a="0">🚫 No</button></div><p class="small fb" style="margin-top:8px"></p></div>'}).join('');
+  $$('#yn .card').forEach(function(c){$$('button',c).forEach(function(b){b.onclick=function(){if(c.dataset.d)return;c.dataset.d=1;var y=Y[+c.dataset.i],r=(+b.dataset.a)===y[1];c.style.borderColor=r?'var(--green)':'var(--red)';$('.fb',c).textContent=(r?'✅ ':'💡 ')+y[2];$$('button',c).forEach(function(x){x.disabled=true});if(r)ok++;if(ok>=5)award('yn',6,'Buen criterio')}})});
+  }
+  build();
+  var rb=document.createElement("button");rb.className="btn sm";rb.textContent="↺ Reiniciar juego";rb.style.marginTop="12px";rb.style.alignSelf="flex-start";rb.onclick=function(){build();coliSay("¡De nuevo! Esta vez te sale perfecto. 💪","happy",3000)};$("#yn").insertAdjacentElement("afterend",rb);
+})();
+
+/* ================= DIAL ================= */
+(function(){
+  function r(){var v=+$('#dial').value,t;
+    if(v<34)t='🎨 Tarea creativa (más libertad)\n\nEjemplo: ideas para motivar la clase\n\n"Propón 10 formas creativas de iniciar la clase sobre el tema. Mezcla juegos, preguntas y retos. Sorpréndeme."';
+    else if(v<67)t='⚖️ Equilibrio\n\nEjemplo: resumen de reunión de área\n\n"Resume en viñetas. Prioriza acuerdos y responsables. Puedes agrupar temas como consideres más claro."';
+    else t='🔒 Tarea crítica (menos libertad)\n\nEjemplo: informe de notas\n\n"Sigue EXACTAMENTE estos pasos:\n1. Usa la escala de 1,0 a 5,0 con un decimal.\n2. Mantén el orden: Área | Nota | Desempeño.\n3. No redondees. No agregues comentarios."';
+    $('#dialOut').textContent=t;if(v>80||v<15)award('dial',2)}
+  $('#dial').addEventListener('input',r);r();
+})();
+
+/* ================= COMPAT ================= */
+(function(){
+  var C=[['🔗','Apps conectadas (Workspace)','✅ Funciona','green'],['📎','Archivos de referencia (texto, PDF, imágenes)','✅ Funciona','green'],['🧱','Varias skills en un prompt','✅ Funciona','green'],['🗓️','Tareas y programaciones (Gemini Spark)','✅ Funciona','green'],['🎨','Canvas','✗ Aún no','red'],['🔎','Deep Research','✗ Aún no','red'],['🎬','Crear video / música','✗ Aún no','red'],['🎓','Aprendizaje guiado','✗ Aún no','red'],['🤝','Compartir skills','⏳ Próximamente','gold'],['📁','Archivos de Google Drive','⏳ Próximamente','gold'],['📓','Notebooks de Gemini Notebook','⏳ Próximamente','gold'],['🐙','Archivos de GitHub','✗ No soportado','red']];
+  $('#compat').innerHTML=C.map(function(c){return '<div class="card" style="padding:14px"><div style="font-size:1.5rem">'+c[0]+'</div><b style="display:block;margin:6px 0">'+c[1]+'</b><span class="tag '+c[3]+'">'+c[2]+'</span></div>'}).join('');
+})();
+
+/* ================= COMPARE ================= */
+(function(){
+  var R=[['Qué es','Versión personalizada de Gemini (un asistente)','Instrucciones reutilizables (una receta)',0],
+   ['Dónde se usa','Abres la Gem y chateas dentro de ella','En cualquier chat, sin cambiar de pestaña',1],
+   ['Cómo se invoca','Seleccionando la Gem en la barra lateral','Escribiendo / (pronto @) o de forma automática',1],
+   ['Activación automática','No','Sí, si la descripción coincide y está activa',1],
+   ['Varias a la vez','No','Sí, se pueden apilar',1],
+   ['Crear desde una conversación','No','Sí, Gemini sugiere guardarla',1],
+   ['Formato','Cerrado (propio de Gemini)','Estándar abierto SKILL.md, portable',1],
+   ['Archivos de referencia','Sí (conocimiento)','Sí (texto, PDF, imágenes; Drive próximamente)',0],
+   ['Funciona con Canvas / Deep Research','Sí','Aún no',1],
+   ['Compartir','Sí','Próximamente',1],
+   ['Futuro','Se retira (nov 2026 personales; 2027 empresas y educación)','Es el reemplazo oficial',1]];
+  $('#cmp').innerHTML='<tr><th></th><th>💎 Gems</th><th>🧩 Skills</th></tr>'+R.map(function(r){return '<tr class="'+(r[3]?'':'same')+'"><td>'+r[0]+'</td><td>'+r[1]+'</td><td class="'+(r[3]?'win':'')+'">'+r[2]+'</td></tr>'}).join('');
+  $('#onlyDiff').onchange=function(){$('#cmp').classList.toggle('only',this.checked);award('cmp',2)};
+})();
+
+/* ================= TREE ================= */
+(function(){
+  var T={
+   s:{q:'¿Quieres producir un entregable visible y editable (documento, presentación, app, código)?',y:'c1',n:'r1'},
+   c1:{q:'¿Además necesitas que siempre siga las mismas reglas fijas (marca, estructura, tono)?',y:'R_cg',n:'R_c'},
+   r1:{q:'¿Repites las mismas instrucciones con frecuencia?',y:'r2',n:'R_chat'},
+   r2:{q:'¿Esa rutina necesita Canvas, Deep Research o Aprendizaje guiado?',y:'R_gem',n:'R_skill'},
+   R_c:{r:'🎨 Usa Canvas',d:'Activa Canvas desde el botón + y di el formato en el prompt. Edita por partes y exporta.'},
+   R_cg:{r:'🎨 Canvas + 💎 Gem (temporal)',d:'Las skills aún no funcionan con Canvas. Mientras existan, una Gem con Canvas como herramienta predeterminada mantiene tus reglas. Guarda las instrucciones para migrarlas a skill.'},
+   R_chat:{r:'💬 Chat normal con buen prompt',d:'Para tareas únicas no hace falta una skill. Usa la fórmula Persona · Tarea · Contexto · Formato.'},
+   R_gem:{r:'💎 Gem (por ahora)',d:'Es la vía para esas herramientas mientras dure la transición. Planea la migración a skill.'},
+   R_skill:{r:'🧩 Crea una skill',d:'Nombre con verbo, descripción con «Úsala cuando…», plantilla de salida y errores comunes. Invócala con / y apílala con otras.'}
+  };
+  var path=[];
+  function r(k){var n=T[k],h='<div class="tree-path">'+path.map(function(p){return '<span class="tag">'+p+'</span>'}).join('')+'</div>';
+    if(n.r){h+='<div class="tree-res" style="margin-top:14px"><h2 style="font-size:1.8rem">'+n.r+'</h2><p style="margin-top:8px">'+n.d+'</p></div><button class="btn sm" style="margin-top:14px" id="trR">↺ Empezar de nuevo</button>';$('#tree').innerHTML=h;$('#trR').onclick=function(){path=[];r('s')};award('tree',4,'Brújula completa');return}
+    h+='<p class="tree-q" style="margin:16px 0">'+n.q+'</p><div class="row"><button class="btn pri" id="trY">Sí</button><button class="btn" id="trN">No</button></div>';
+    $('#tree').innerHTML=h;$('#trY').onclick=function(){path.push('Sí');r(n.y)};$('#trN').onclick=function(){path.push('No');r(n.n)}}
+  r('s');
+})();
+
+/* ================= RETOS ================= */
+(function(){
+  var R=[['🎨','Reto 1 · Canvas','Crea una presentación de 5 diapositivas para tu próxima clase.','Crea una presentación de 5 diapositivas para explicar [tema] a estudiantes de grado [X]. Una idea por diapositiva y una pregunta para la clase en cada una.',['Activé Canvas desde el botón +','Obtuve 5 diapositivas','Cambié una diapositiva pidiendo un ajuste puntual','La compartí o exporté (Docs, Slides o PDF)']],
+   ['🧩','Reto 2 · Tu primera skill','Construye una skill con el validador y créala desde la app de Gemini.','Crea una skill basada en estas instrucciones: [pega aquí lo que copiaste del constructor]',['El validador marcó 100%','Copié la skill con «Copiar para pegar en Gemini»','La pegué en Gemini y la encontré en Configuración → Skills','La invoqué con / en un chat nuevo']],
+   ['🧱','Reto 3 · Apilar skills','Combina dos skills en un solo pedido.','/planear-clase /adaptar-inclusion Planea mi clase de [tema] para grado [X], de [N] minutos',['Tengo al menos 2 skills activas','Las invoqué juntas en un prompt','El resultado respeta ambas reglas','Probé que una se active sola sin invocarla']]];
+  $('#retos').innerHTML=R.map(function(r,i){return '<div class="card"><div class="ic '+['b','g','v'][i]+'">'+r[0]+'</div><h3 style="margin:10px 0 4px">'+r[1]+'</h3><p class="small">'+r[2]+'</p><pre class="code" style="font-size:.76rem;margin:10px 0">'+esc(r[3])+'</pre><button class="btn sm" data-cp="'+i+'">⧉ Copiar prompt</button><div style="margin-top:10px">'+r[4].map(function(c,j){return '<label class="ck"><input type="checkbox" data-r="'+i+'-'+j+'"> '+c+'</label>'}).join('')+'</div></div>'}).join('');
+  $$('#retos [data-cp]').forEach(function(b){b.onclick=function(){copyText(R[+b.dataset.cp][3],b)}});
+  $$('#retos [data-r]').forEach(function(c){c.onchange=function(){if(c.checked)award('ck'+c.dataset.r,3);var i=c.dataset.r.split('-')[0];if($$('#retos [data-r^="'+i+'-"]').every(function(x){return x.checked}))award('reto'+i,10,'¡Reto completado!')}});
+  var rr=document.createElement('button');rr.className='btn sm';rr.textContent='↺ Limpiar retos';rr.style.marginTop='12px';rr.style.alignSelf='flex-start';rr.onclick=function(){$$('#retos [data-r]').forEach(function(c){c.checked=false})};$('#retos').insertAdjacentElement('afterend',rr);
+  var s=600,iv=null;function f(){$('#tmr').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');$('#tmr').style.color=s<=60?'var(--coral)':''}
+  $('#tmrB').onclick=function(){var b=this;if(iv){clearInterval(iv);iv=null;b.textContent='▶ Continuar';return}b.textContent='❚❚ Pausar';iv=setInterval(function(){s--;f();if(s<=0){clearInterval(iv);iv=null;b.textContent='▶ Iniciar';toast('⏰ ¡Tiempo!')}},1000)};
+  $('#tmrR').onclick=function(){clearInterval(iv);iv=null;s=600;f();$('#tmrB').textContent='▶ Iniciar'};f();
+})();
+
+/* ================= FINAL QUIZ ================= */
+(function(){
+  var Q=[
+   {q:'¿Qué anunció Google el 30 de septiembre de 2026?',o:['Que Canvas desaparece','Que las skills reemplazarán a las Gems','Que las Gems serán de pago'],a:1},
+   {q:'¿Cuál es el nombre de skill correcto?',o:['Planear Clase','planear_clase','planear-clase'],a:2},
+   {q:'¿Qué decide si Gemini usa una skill automáticamente?',o:['El tamaño de los archivos','El nombre y la descripción','La fecha de creación'],a:1},
+   {q:'¿Cuál de estos archivos NO se puede subir a una skill?',o:['manual.pdf','plantilla.docx','datos.csv'],a:1},
+   {q:'¿Cuántas skills puede tener activas a la vez?',o:['10','50','100'],a:2},
+   {q:'Hoy, ¿las skills funcionan con Canvas?',o:['Sí, siempre','Aún no','Solo en móvil'],a:1},
+   {q:'En Canvas, ¿qué opción convierte un documento en quiz, infografía o página web?',o:['Crear','Compartir','Código'],a:0},
+   {q:'¿Qué hacer si una tarea solo ocurre una vez?',o:['Crear una skill','Usar un buen prompt en el chat','Crear tres skills'],a:1}
+  ];
+  var i=0,score=0;
+  function r(){if(i>=Q.length){var pct=Math.round(score/Q.length*100);$('#fq').innerHTML='<div style="text-align:center;padding:20px"><div style="font-size:3.4rem">'+(pct>=75?'🏆':pct>=50?'🎯':'📚')+'</div><h2>'+score+' / '+Q.length+'</h2><p class="lead" style="margin:10px auto">'+(pct>=75?'¡Excelente! Dominas Canvas, Gems y Skills.':pct>=50?'¡Bien! Repasa las escenas donde dudaste.':'Buen comienzo: vuelve a los simuladores.')+'</p><button class="btn" id="fqR">↺ Repetir</button></div>';$('#fqR').onclick=function(){i=0;score=0;r()};if(pct>=75)award('final',15,'Maestría Gemini');return}
+    var q=Q[i];$('#fq').innerHTML='<div class="row" style="justify-content:space-between;margin-bottom:12px"><span class="tag gold">Pregunta '+(i+1)+' de '+Q.length+'</span><span class="row" style="gap:6px"><span class="tag">Aciertos: '+score+'</span><button class="btn sm" id="fqRst" style="padding:4px 10px">↺ Empezar de nuevo</button></span></div><div class="bar" style="margin-bottom:16px"><i style="width:'+(i/Q.length*100)+'%"></i></div><div class="mcq"><div class="q" style="font-size:1.3rem">'+esc(q.q)+'</div>'+q.o.map(function(o,k){return '<button class="opt" data-k="'+k+'">'+esc(o)+'</button>'}).join('')+'</div>';
+    $('#fqRst').onclick=function(){i=0;score=0;r()};
+    $$('#fq .opt').forEach(function(b){b.onclick=function(){var k=+b.dataset.k;$$('#fq .opt').forEach(function(x){x.disabled=true});b.classList.add(k===q.a?'ok':'ko');$$('#fq .opt')[q.a].classList.add('ok');if(k===q.a)score++;else coliSay(HINTS[Math.floor(Math.random()*HINTS.length)],'think',3000);setTimeout(function(){i++;r()},1100)}})}
+  r();
+})();
+
+/* ================= ACHIEVEMENTS & PRINT ================= */
+var ACH=[['cvsim','🎨','Abriste Canvas'],['anat','🧭','Dominas el panel'],['trans','🔁','Seis formatos'],['app','📒','Calculaste notas'],['pl','✍️','Prompt copiado'],['gem','💎','Instrucciones expertas'],['tl','🗓️','Conoces el calendario'],['load','🧠','Carga progresiva'],['sb','🧩','Skill perfecta'],['stack','🧱','Apilaste skills'],['files','📎','Experto en archivos'],['tree','🧭','Brújula completa'],['final','🏆','Maestría Gemini'],['secret','🪶','Cosquillas a Coli','Pista: a Coli le dan cosquillas. Tócalo 5 veces seguidas.']];
+function achHTML(){return ACH.map(function(x){var on=awarded[x[0]],sec=!!x[3];return '<div class="'+(on?'on ':'')+(sec?'secret':'')+'"><span>'+(sec&&!on?'❓':x[1])+'</span>'+(sec&&!on?'Logro secreto':x[2])+(sec&&!on?'<em>'+x[3]+'</em>':'')+'</div>'}).join('')}
+function renderAch(){
+  var n=ACH.filter(function(x){return awarded[x[0]]}).length,h=achHTML();
+  if($('#ach'))$('#ach').innerHTML=h;
+  if($('#achGrid'))$('#achGrid').innerHTML=h;
+  if($('#finalPts'))$('#finalPts').textContent=points;
+  if($('#achPts'))$('#achPts').textContent=points;
+  if($('#achCount'))$('#achCount').textContent=n+' de '+ACH.length+' logros';
+  if($('#achMeter'))$('#achMeter').style.width=(n/ACH.length*100)+'%';
+  if(awarded.secret)$('#coliBtn').classList.add('gold');
+}
+renderAch();
+$('#pts').onclick=function(){renderAch();toggleD('achD')};
+$$('[data-reset-all]').forEach(function(b){b.onclick=function(){
+  $('#modalBody').innerHTML='<h3>↺ ¿Reiniciar todo el taller?</h3><p class="small" style="margin-top:8px">Se borran tus puntos, tus logros (también el secreto) y vuelves al inicio. No se puede deshacer.</p><div class="row" style="margin-top:16px;justify-content:flex-end"><button class="btn sm" id="rsNo">Cancelar</button><button class="btn pri sm" id="rsYes">Sí, reiniciar</button></div>';
+  $('#modal').classList.add('on');
+  $('#rsNo').onclick=closeModal;
+  $('#rsYes').onclick=function(){try{localStorage.removeItem('gstate')}catch(e){}try{history.replaceState(null,'','#1')}catch(e){}window.scrollTo(0,0);location.reload()};
+}});
+
+/* ---- confeti ---- */
+var FX={c:null,x:null,p:[],raf:0};
+function confetti(n,emojis){
+  if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  var c=FX.c||(FX.c=$('#fx'));FX.x=c.getContext('2d');c.width=innerWidth*devicePixelRatio;c.height=innerHeight*devicePixelRatio;
+  var cols=['#f5b941','#60a5fa','#8b5cf6','#2dd4bf','#fb7185','#34d399'];
+  for(var i=0;i<n;i++){FX.p.push({x:innerWidth/2+(Math.random()-.5)*160,y:innerHeight*.28,vx:(Math.random()-.5)*14,vy:-Math.random()*13-4,r:Math.random()*Math.PI,vr:(Math.random()-.5)*.3,s:6+Math.random()*7,c:cols[i%cols.length],e:emojis?emojis[i%emojis.length]:null,l:0})}
+  if(!FX.raf)FX.raf=requestAnimationFrame(fxStep);
+}
+function fxStep(){
+  var x=FX.x,d=devicePixelRatio;x.setTransform(d,0,0,d,0,0);x.clearRect(0,0,innerWidth,innerHeight);
+  FX.p=FX.p.filter(function(p){return p.y<innerHeight+40&&p.l<260});
+  FX.p.forEach(function(p){p.vy+=.32;p.vx*=.99;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;p.l++;x.save();x.translate(p.x,p.y);x.rotate(p.r);
+    if(p.e){x.font=(p.s*2.6)+'px serif';x.fillText(p.e,0,0)}else{x.fillStyle=p.c;x.fillRect(-p.s/2,-p.s/4,p.s,p.s/2)}x.restore()});
+  if(FX.p.length)FX.raf=requestAnimationFrame(fxStep);else{FX.raf=0;x.clearRect(0,0,innerWidth,innerHeight)}
+}
+var unT=null;
+function showUnlock(ax,p){
+  $('#unI').textContent=ax[1];$('#unT').textContent=ax[2];$('#unP').textContent='+'+p+' puntos · toca ★ para ver tus logros';
+  var u=$('#unlock');u.classList.remove('on');void u.offsetWidth;u.classList.add('on');
+  clearTimeout(unT);unT=setTimeout(function(){u.classList.remove('on')},3200);
+  confetti(ax[0]==='secret'?40:90,ax[0]==='secret'?['🪶','✨','💛','🪶']:null);
+}
+
+/* ---- logro secreto: cosquillas a Coli ---- */
+(function(){
+  var taps=[];
+  $('#coliBtn').addEventListener('click',function(){
+    var now=Date.now();taps=taps.filter(function(t){return now-t<3000});taps.push(now);
+    if(taps.length===3&&!awarded.secret){setTimeout(function(){coliSay('¡Ji, ji! ¡Eso me hace cosquillas! 🪶','happy',2200)},30)}
+    if(taps.length>=5){taps=[];
+      var b=$('#coliBtn');b.classList.remove('fly');void b.offsetWidth;b.classList.add('fly');
+      setTimeout(function(){b.classList.remove('fly')},2300);
+      if(!awarded.secret){award('secret',20,'Logro secreto');b.classList.add('gold');
+        setTimeout(function(){coliSay('¡JAJAJA! ¡Descubriste mi secreto! Ahora soy <b>Coli dorado</b> ✨ No le cuentes a nadie… o mejor sí.','happy',7000)},80);
+        setTimeout(function(){confetti(60,['🪶','✨','💛'])},900);}
+      else{confetti(30,['🪶','✨']);setTimeout(function(){coliSay('¡Otra vuelta! Soy el colibrí más rápido del Quindío. 💨','happy',3500)},60)}
+    }
+  });
+})();
+var KIT=[['🎨 Canvas',['Abrir: botón + debajo del cuadro → Canvas.','Di el formato en el prompt: «Crea una presentación…».','Edita: selecciona y pide; cambia tono y longitud; versiones anterior y siguiente.','Crear: página web, infografía, quiz, Audio Overview, presentación, app, LaTeX.','Exportar: Docs, Slides (o PDF), copiar, Python a Colab, enlace público (abre solo en la web).']],
+ ['💎 Gems',['Barra lateral → Gems → Nueva Gem. Crear y editar solo en la web; usar también en el celular.','Fórmula: Persona · Tarea · Contexto · Formato.','Retiro: nov 2026 (personales), desde mar 2027 (empresas), desde jun 2027 (educación). Migran solas como borradores de skills.']],
+ ['🧩 Skills',['Configuración → Skills: crear con Gemini, plantilla, manual, subir, o pedirlo en un chat.','name: minúsculas-con-guiones y empieza con verbo. description: tercera persona + «Úsala cuando…» (máx. 1024).','Incluye pasos, plantilla de salida, errores comunes y qué hacer si falta información.','Usar: / (pronto @), automático y apilables. Máx. 100 activas. Archivos hasta 100 MB, sin .docx ni .xlsx.','Aún no funcionan con Canvas, Deep Research, video, música ni Aprendizaje guiado.']]];
+function kitText(){return 'KIT DE BOLSILLO · Gemini: Canvas, Gems y Skills\n'+'Capacitador: '+CFG.presenter+' · '+CFG.org+'\n\n'+KIT.map(function(k){return k[0]+'\n'+k[1].map(function(x){return '• '+x}).join('\n')}).join('\n\n')+'\n\nFuentes:\n'+Object.keys(SRC).map(function(k){return '• '+SRC[k].t+' — '+SRC[k].u}).join('\n')}
+$('#kitBody').innerHTML=KIT.map(function(k){return '<h4>'+k[0]+'</h4><ul>'+k[1].map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul>'}).join('');
+$('#kitCp').onclick=function(){copyText(kitText(),this);award('print',3,'Kit copiado')};
+
+/* ---- móvil vs computador ---- */
+(function(){
+  var D=[['🎨 Canvas',[['y','Crear documentos y presentaciones'],['y','Editar pidiendo cambios'],['p','Abrir enlaces compartidos: solo en el navegador']]],
+   ['🧩 Skills',[['y','Usarlas con / en el chat'],['y','Pedir a Gemini que cree una skill'],['n','Subir un SKILL.md: solo web o Mac']]],
+   ['💎 Gems',[['y','Conversar con tus Gems'],['n','Crear o editar: solo en la web'],['p','Se retiran en noviembre (cuentas personales)']]]];
+  $('#devGrid').innerHTML=D.map(function(d){return '<div class="stack"><b>'+d[0]+'</b>'+d[1].map(function(x){return '<span class="dev '+x[0]+'">'+({y:'✓',n:'✗',p:'!'})[x[0]]+' '+x[1]+'</span>'}).join('')+'</div>'}).join('');
+})();
+
+
+/* ================= INIT ================= */
+buildRail();applyCfg();
+try{if('scrollRestoration' in history)history.scrollRestoration='manual'}catch(e){}
+var start=parseInt((location.hash||'').slice(1),10);
+if(!(start>1))window.scrollTo(0,0);
+onScroll();
+if(start>1&&start<=scenes.length){setTimeout(function(){var y=scenes[start-1].getBoundingClientRect().top+window.pageYOffset;window.scrollTo(0,y)},60)}
+</script>
